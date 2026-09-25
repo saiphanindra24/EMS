@@ -105,6 +105,8 @@ export async function GET() {
         myPendingLeave,
         checkedInToday: Boolean(attendanceToday?.checkIn),
         checkedOutToday: Boolean(attendanceToday?.checkOut),
+        checkInTime: attendanceToday?.checkIn ?? null,
+        checkOutTime: attendanceToday?.checkOut ?? null,
       },
     });
   });
