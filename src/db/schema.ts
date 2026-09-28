@@ -195,6 +195,12 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "general",
 ]);
 
+export const registrationStatusEnum = pgEnum("registration_status", [
+  "pending",
+  "approved",
+  "rejected",
+]);
+
 // ---------------------------------------------------------------------------
 // 1. AUTHENTICATION / USERS
 // ---------------------------------------------------------------------------
@@ -208,9 +214,33 @@ export const users = pgTable("users", {
   role: roleEnum("role").notNull().default("employee"),
   isActive: boolean("is_active").notNull().default(true),
   mustChangePassword: boolean("must_change_password").notNull().default(false),
+  setupToken: varchar("setup_token", { length: 128 }).unique(),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// 1b. REGISTRATION REQUESTS
+// ---------------------------------------------------------------------------
+// Self-service registration: employees submit a request, admins approve/reject.
+export const registrationRequests = pgTable("registration_requests", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).notNull(),
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  status: registrationStatusEnum("status").notNull().default("pending"),
+  reviewedBy: integer("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  rejectionReason: text("rejection_reason"),
+  // Fields set by admin during approval
+  assignedEmployeeCode: varchar("assigned_employee_code", { length: 30 }),
+  assignedDepartmentId: integer("assigned_department_id").references(() => departments.id, { onDelete: "set null" }),
+  assignedDesignationId: integer("assigned_designation_id").references(() => designations.id, { onDelete: "set null" }),
+  assignedRole: roleEnum("assigned_role").default("employee"),
+  createdUserId: integer("created_user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // ---------------------------------------------------------------------------

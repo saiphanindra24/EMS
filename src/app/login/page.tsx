@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 import { api, ApiClientError } from "@/lib/api-client";
 import { useAuth } from "@/components/AuthProvider";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -13,28 +14,12 @@ interface LoginForm {
   password: string;
 }
 
-const DEMO_ACCOUNTS = [
-  ["superadmin@ems.local", "Super Admin", "👑"],
-  ["hradmin@ems.local", "HR Admin", "🛡️"],
-  ["hrexec@ems.local", "HR Executive", "📋"],
-  ["manager@ems.local", "Dept Manager", "🏢"],
-  ["teamlead@ems.local", "Team Lead", "👥"],
-  ["employee@ems.local", "Employee", "🧑‍💼"],
-  ["finance@ems.local", "Finance Admin", "💰"],
-  ["trainingadmin@ems.local", "Training Admin", "🎓"],
-  ["trainer@ems.local", "Trainer", "📚"],
-  ["auditor@ems.local", "Auditor", "🔍"],
-];
-
 export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
-  } = useForm<LoginForm>({
-    defaultValues: { email: "hradmin@ems.local", password: "Password@123" },
-  });
+  } = useForm<LoginForm>();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -142,12 +127,15 @@ export default function LoginPage() {
               — all unified in one powerful platform.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <span className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-indigo-600 shadow-xl shadow-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl cursor-pointer">
-                Get Started
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-indigo-600 shadow-xl shadow-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl"
+              >
+                Register Now
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
-              </span>
+              </Link>
               <span className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/10 cursor-pointer">
                 View Portfolio
               </span>
@@ -189,10 +177,13 @@ export default function LoginPage() {
                     </label>
                     <input
                       type="email"
-                      {...register("email", { required: true })}
+                      {...register("email", { required: "Email is required" })}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 transition-all duration-200 focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-violet-100"
                       placeholder="name@company.com"
                     />
+                    {errors.email && (
+                      <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+                    )}
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -238,38 +229,26 @@ export default function LoginPage() {
                   </button>
                 </form>
 
-                {/* Demo accounts */}
-                <div className="mt-6">
-                  <div className="relative mb-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-slate-100" />
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="bg-white px-3 text-xs font-medium text-slate-400">
-                        Demo accounts
-                      </span>
-                    </div>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-100" />
                   </div>
-                  <p className="mb-3 text-center text-xs text-slate-400">
-                    Password: <code className="rounded-md bg-violet-50 px-1.5 py-0.5 font-semibold text-violet-600">Password@123</code>
-                  </p>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {DEMO_ACCOUNTS.map(([email, label, emoji]) => (
-                      <button
-                        key={email}
-                        type="button"
-                        onClick={() => {
-                          setValue("email", email);
-                          setValue("password", "Password@123");
-                        }}
-                        className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-left text-xs font-medium text-slate-600 transition-all duration-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-sm"
-                      >
-                        <span className="text-sm">{emoji}</span>
-                        <span>{label}</span>
-                      </button>
-                    ))}
+                  <div className="relative flex justify-center">
+                    <span className="bg-white px-3 text-xs font-medium text-slate-400">
+                      New here?
+                    </span>
                   </div>
                 </div>
+
+                <Link
+                  href="/register"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                  </svg>
+                  Create an account
+                </Link>
               </div>
             </div>
           </div>

@@ -36,6 +36,13 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["super_admin", "hr_admin", "hr_executive", "finance_admin", "training_admin", "auditor"],
   },
   { href: "/audit-logs", label: "Audit Logs", icon: "🛡️", section: "Admin", roles: ["super_admin", "auditor"] },
+  {
+    href: "/registrations",
+    label: "Registrations",
+    icon: "📝",
+    section: "Admin",
+    roles: ["super_admin", "hr_admin", "hr_executive"],
+  },
   { href: "/notifications", label: "Notifications", icon: "🔔", section: "Admin" },
 ];
 

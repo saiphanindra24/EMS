@@ -1,12 +1,11 @@
 // One-off database seed script.
 // Run with: npx tsx scripts/seed.ts
-// Creates demo departments, designations, leave types, holidays, and one
-// login per role so every part of the RBAC matrix can be exercised.
+// Creates the initial super admin account plus departments, designations,
+// leave types, and holidays. Employees register themselves via /register.
 import "dotenv/config";
 import { db, pool } from "../src/db";
 import {
   users,
-  employees,
   departments,
   designations,
   leaveTypes,
@@ -15,56 +14,12 @@ import {
 import { hashPassword } from "../src/lib/auth";
 import { eq } from "drizzle-orm";
 
-const DEMO_PASSWORD = "Password@123";
-
-async function upsertUser(email: string, role: (typeof users.role.enumValues)[number]) {
-  const existing = await db.select().from(users).where(eq(users.email, email));
-  if (existing.length) return existing[0];
-  const passwordHash = await hashPassword(DEMO_PASSWORD);
-  const [user] = await db.insert(users).values({ email, passwordHash, role }).returning();
-  return user;
-}
-
-async function upsertEmployee(input: {
-  userId: number;
-  employeeCode: string;
-  firstName: string;
-  lastName: string;
-  departmentId: number | null;
-  designationId: number | null;
-  managerId: number | null;
-  dateOfJoining: string;
-}) {
-  const existing = await db.select().from(employees).where(eq(employees.userId, input.userId));
-  if (existing.length) return existing[0];
-  const [emp] = await db
-    .insert(employees)
-    .values({
-      userId: input.userId,
-      employeeCode: input.employeeCode,
-      firstName: input.firstName,
-      lastName: input.lastName,
-      departmentId: input.departmentId,
-      designationId: input.designationId,
-      managerId: input.managerId,
-      dateOfJoining: input.dateOfJoining,
-      employmentType: "full_time",
-      employmentStatus: "active",
-      workLocation: "onsite",
-      shift: "general",
-      salary: "60000",
-      bankAccountNumber: "000123456789",
-      bankName: "Demo National Bank",
-      bankIfsc: "DEMO0001234",
-      pan: "ABCDE1234F",
-      uan: "100200300400",
-    })
-    .returning();
-  return emp;
-}
+// ⚠️ Change these to your real admin credentials before running!
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@volksskatt.com";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123";
 
 async function main() {
-  console.log("Seeding EMS/ETS demo data...");
+  console.log("Seeding VolkssKatt EMS...\n");
 
   // Departments
   const deptSeed = [
@@ -79,6 +34,7 @@ async function main() {
     const row = existing[0] ?? (await db.insert(departments).values(d).returning())[0];
     deptRows[d.code] = row.id;
   }
+  console.log("✅ Departments seeded");
 
   // Designations
   const desigSeed = [
@@ -88,12 +44,11 @@ async function main() {
     { title: "Finance Officer", departmentId: deptRows.FIN, level: "senior" as const },
     { title: "Training Coordinator", departmentId: deptRows.TRN, level: "senior" as const },
   ];
-  const desigRows: Record<string, number> = {};
   for (const d of desigSeed) {
     const existing = await db.select().from(designations).where(eq(designations.title, d.title));
-    const row = existing[0] ?? (await db.insert(designations).values(d).returning())[0];
-    desigRows[d.title] = row.id;
+    if (!existing.length) await db.insert(designations).values(d);
   }
+  console.log("✅ Designations seeded");
 
   // Leave types
   const leaveSeed = [
@@ -109,144 +64,43 @@ async function main() {
     const existing = await db.select().from(leaveTypes).where(eq(leaveTypes.code, l.code));
     if (!existing.length) await db.insert(leaveTypes).values(l);
   }
+  console.log("✅ Leave types seeded");
 
   // Holidays
+  const year = new Date().getFullYear();
   const holidaySeed = [
-    { name: "New Year's Day", date: `${new Date().getFullYear()}-01-01` },
-    { name: "Independence Day", date: `${new Date().getFullYear()}-08-15` },
-    { name: "Republic Day", date: `${new Date().getFullYear()}-01-26` },
+    { name: "New Year's Day", date: `${year}-01-01` },
+    { name: "Republic Day", date: `${year}-01-26` },
+    { name: "Independence Day", date: `${year}-08-15` },
+    { name: "Gandhi Jayanti", date: `${year}-10-02` },
+    { name: "Diwali", date: `${year}-11-01` },
+    { name: "Christmas", date: `${year}-12-25` },
   ];
   for (const h of holidaySeed) {
     const existing = await db.select().from(holidays).where(eq(holidays.date, h.date));
     if (!existing.length) await db.insert(holidays).values(h);
   }
+  console.log("✅ Holidays seeded");
 
-  // Users + employees - one representative per role.
-  const superAdminUser = await upsertUser("superadmin@ems.local", "super_admin");
-  const superAdmin = await upsertEmployee({
-    userId: superAdminUser.id,
-    employeeCode: "EMP-0001",
-    firstName: "Ava",
-    lastName: "Sterling",
-    departmentId: deptRows.HR,
-    designationId: desigRows["HR Manager"],
-    managerId: null,
-    dateOfJoining: "2020-01-10",
-  });
+  // Super Admin account
+  const existing = await db.select().from(users).where(eq(users.email, ADMIN_EMAIL));
+  if (!existing.length) {
+    const passwordHash = await hashPassword(ADMIN_PASSWORD);
+    await db.insert(users).values({
+      email: ADMIN_EMAIL,
+      passwordHash,
+      role: "super_admin",
+      isActive: true,
+    });
+    console.log(`\n✅ Super admin created:`);
+    console.log(`   Email:    ${ADMIN_EMAIL}`);
+    console.log(`   Password: ${ADMIN_PASSWORD}`);
+  } else {
+    console.log(`\n✅ Super admin already exists: ${ADMIN_EMAIL}`);
+  }
 
-  const hrAdminUser = await upsertUser("hradmin@ems.local", "hr_admin");
-  const hrAdmin = await upsertEmployee({
-    userId: hrAdminUser.id,
-    employeeCode: "EMP-0002",
-    firstName: "Priya",
-    lastName: "Nair",
-    departmentId: deptRows.HR,
-    designationId: desigRows["HR Manager"],
-    managerId: superAdmin.id,
-    dateOfJoining: "2020-03-15",
-  });
-
-  await upsertEmployee({
-    userId: (await upsertUser("hrexec@ems.local", "hr_executive")).id,
-    employeeCode: "EMP-0003",
-    firstName: "Noah",
-    lastName: "Bennett",
-    departmentId: deptRows.HR,
-    designationId: desigRows["HR Manager"],
-    managerId: hrAdmin.id,
-    dateOfJoining: "2021-02-01",
-  });
-
-  const managerUser = await upsertUser("manager@ems.local", "department_manager");
-  const manager = await upsertEmployee({
-    userId: managerUser.id,
-    employeeCode: "EMP-0004",
-    firstName: "Liam",
-    lastName: "Carter",
-    departmentId: deptRows.ENG,
-    designationId: desigRows["Engineering Manager"],
-    managerId: superAdmin.id,
-    dateOfJoining: "2019-06-01",
-  });
-
-  const teamLeadUser = await upsertUser("teamlead@ems.local", "team_lead");
-  const teamLead = await upsertEmployee({
-    userId: teamLeadUser.id,
-    employeeCode: "EMP-0005",
-    firstName: "Emma",
-    lastName: "Diaz",
-    departmentId: deptRows.ENG,
-    designationId: desigRows["Software Engineer"],
-    managerId: manager.id,
-    dateOfJoining: "2020-09-01",
-  });
-
-  await upsertEmployee({
-    userId: (await upsertUser("employee@ems.local", "employee")).id,
-    employeeCode: "EMP-0006",
-    firstName: "Oliver",
-    lastName: "Kim",
-    departmentId: deptRows.ENG,
-    designationId: desigRows["Software Engineer"],
-    managerId: teamLead.id,
-    dateOfJoining: "2022-04-11",
-  });
-
-  await upsertEmployee({
-    userId: (await upsertUser("finance@ems.local", "finance_admin")).id,
-    employeeCode: "EMP-0007",
-    firstName: "Sophia",
-    lastName: "Wallace",
-    departmentId: deptRows.FIN,
-    designationId: desigRows["Finance Officer"],
-    managerId: superAdmin.id,
-    dateOfJoining: "2021-07-19",
-  });
-
-  await upsertEmployee({
-    userId: (await upsertUser("trainingadmin@ems.local", "training_admin")).id,
-    employeeCode: "EMP-0008",
-    firstName: "Mason",
-    lastName: "Reed",
-    departmentId: deptRows.TRN,
-    designationId: desigRows["Training Coordinator"],
-    managerId: superAdmin.id,
-    dateOfJoining: "2021-01-05",
-  });
-
-  await upsertEmployee({
-    userId: (await upsertUser("trainer@ems.local", "trainer")).id,
-    employeeCode: "EMP-0009",
-    firstName: "Isabella",
-    lastName: "Moore",
-    departmentId: deptRows.TRN,
-    designationId: desigRows["Training Coordinator"],
-    managerId: superAdmin.id,
-    dateOfJoining: "2022-01-05",
-  });
-
-  await upsertEmployee({
-    userId: (await upsertUser("auditor@ems.local", "auditor")).id,
-    employeeCode: "EMP-0010",
-    firstName: "James",
-    lastName: "Foster",
-    departmentId: deptRows.HR,
-    designationId: desigRows["HR Manager"],
-    managerId: superAdmin.id,
-    dateOfJoining: "2023-01-05",
-  });
-
-  console.log("\nSeed complete. Demo accounts (all use password: Password@123):");
-  console.log(" super_admin       -> superadmin@ems.local");
-  console.log(" hr_admin          -> hradmin@ems.local");
-  console.log(" hr_executive      -> hrexec@ems.local");
-  console.log(" department_manager-> manager@ems.local");
-  console.log(" team_lead         -> teamlead@ems.local");
-  console.log(" employee          -> employee@ems.local");
-  console.log(" finance_admin     -> finance@ems.local");
-  console.log(" training_admin    -> trainingadmin@ems.local");
-  console.log(" trainer           -> trainer@ems.local");
-  console.log(" auditor           -> auditor@ems.local");
+  console.log("\n🎉 Seed complete! Employees can register at /register");
+  console.log("   Admin approves registrations at /registrations\n");
 
   await pool.end();
 }
