@@ -8,6 +8,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { PageHeader, Table, Badge, Button, Modal, Field, inputClass, EmptyState } from "@/components/ui";
 import { MIN_PASSWORD_LENGTH, PASSWORD_HINT, PASSWORD_TOO_SHORT, validatePasswordStrength } from "@/lib/password";
 import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
+import { exportToCsv } from "@/lib/export";
 
 interface EmployeeRow {
   id: number;
@@ -98,6 +99,18 @@ export default function EmployeesPage() {
     }
   };
 
+  const handleExport = () => {
+    exportToCsv("employees-roster", rows, [
+      { header: "Employee Code", accessor: "employeeCode" },
+      { header: "First Name", accessor: "firstName" },
+      { header: "Last Name", accessor: "lastName" },
+      { header: "Department", accessor: (r) => r.departmentName ?? "" },
+      { header: "Designation", accessor: (r) => r.designationTitle ?? "" },
+      { header: "Employment Type", accessor: "employmentType" },
+      { header: "Status", accessor: "employmentStatus" },
+    ]);
+  };
+
   return (
     <div>
       <PageHeader
@@ -125,6 +138,14 @@ export default function EmployeesPage() {
                 className={inputClass + " w-64 pl-9"}
               />
             </div>
+            {rows.length > 0 && (
+              <Button variant="secondary" onClick={handleExport}>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Export CSV
+              </Button>
+            )}
             {canCreate && (
               <Button onClick={() => setOpen(true)}>
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

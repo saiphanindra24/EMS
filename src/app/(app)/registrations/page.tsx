@@ -13,6 +13,7 @@ import {
   inputClass,
   EmptyState,
 } from "@/components/ui";
+import { exportToCsv } from "@/lib/export";
 
 interface RegistrationRow {
   id: number;
@@ -62,6 +63,8 @@ export default function RegistrationsPage() {
   const [approveModal, setApproveModal] = useState<RegistrationRow | null>(null);
   const [rejectModal, setRejectModal] = useState<RegistrationRow | null>(null);
   const [setupLink, setSetupLink] = useState<string | null>(null);
+  const [approvedUser, setApprovedUser] = useState<{ name: string; email: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const approveForm = useForm<ApproveForm>({
@@ -106,6 +109,11 @@ export default function RegistrationsPage() {
           : null,
       });
       setSetupLink(`${window.location.origin}${data.setupUrl}`);
+      setApprovedUser({
+        name: `${approveModal.firstName} ${approveModal.lastName}`,
+        email: approveModal.email,
+      });
+      setCopied(false);
       setApproveModal(null);
       approveForm.reset();
       load();
@@ -133,33 +141,62 @@ export default function RegistrationsPage() {
     }
   };
 
+  const copyToClipboard = () => {
+    if (!setupLink) return;
+    navigator.clipboard.writeText(setupLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleExport = () => {
+    exportToCsv("registration-requests", rows, [
+      { header: "First Name", accessor: "firstName" },
+      { header: "Last Name", accessor: "lastName" },
+      { header: "Email", accessor: "email" },
+      { header: "Phone", accessor: (r) => r.phone ?? "" },
+      { header: "Status", accessor: "status" },
+      { header: "Assigned Code", accessor: (r) => r.assignedEmployeeCode ?? "" },
+      { header: "Submitted Date", accessor: (r) => new Date(r.createdAt).toLocaleDateString() },
+    ]);
+  };
+
   return (
     <div>
       <PageHeader
         title="Registration Requests"
-        description="Review and approve employee registration requests."
+        description="Review and approve employee self-registration requests."
         actions={
-          <div className="flex gap-1.5">
-            {(["all", "pending", "approved", "rejected"] as const).map(
-              (f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-all ${
-                    filter === f
-                      ? "bg-violet-100 text-violet-700"
-                      : "text-slate-500 hover:bg-slate-100"
-                  }`}
-                >
-                  {f}
-                  {f !== "all" && (
-                    <span className="ml-1.5 text-[10px]">
-                      ({rows.filter((r) => r.status === f).length})
-                    </span>
-                  )}
-                </button>
-              ),
+          <div className="flex items-center gap-3">
+            {rows.length > 0 && (
+              <Button variant="secondary" onClick={handleExport}>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Export CSV
+              </Button>
             )}
+            <div className="flex gap-1.5">
+              {(["all", "pending", "approved", "rejected"] as const).map(
+                (f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-all ${
+                      filter === f
+                        ? "bg-violet-100 text-violet-700"
+                        : "text-slate-500 hover:bg-slate-100"
+                    }`}
+                  >
+                    {f}
+                    {f !== "all" && (
+                      <span className="ml-1.5 text-[10px]">
+                        ({rows.filter((r) => r.status === f).length})
+                      </span>
+                    )}
+                  </button>
+                ),
+              )}
+            </div>
           </div>
         }
       />
@@ -167,31 +204,47 @@ export default function RegistrationsPage() {
       {/* Setup link banner */}
       {setupLink && (
         <div className="mb-6 animate-fade-in-up">
-          <Card className="relative overflow-hidden border-emerald-200 bg-emerald-50">
+          <Card className="relative overflow-hidden border-emerald-200 bg-emerald-50 p-5">
             <button
               onClick={() => setSetupLink(null)}
               className="absolute top-3 right-3 text-emerald-400 hover:text-emerald-600"
             >
               ✕
             </button>
-            <p className="text-sm font-semibold text-emerald-900">
-              ✅ Employee approved! Share this setup link:
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
+                ✓
+              </span>
+              <p className="text-sm font-semibold text-emerald-900">
+                {approvedUser?.name || "Employee"} approved successfully!
+              </p>
+            </div>
+            <p className="mt-2 text-xs text-emerald-700">
+              Share the personalized onboarding setup link with <strong>{approvedUser?.email}</strong>:
             </p>
-            <div className="mt-2 flex items-center gap-2">
-              <code className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-mono text-emerald-800 border border-emerald-200 break-all">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <code className="flex-1 min-w-[280px] rounded-lg bg-white px-3 py-2 text-xs font-mono text-emerald-800 border border-emerald-200 break-all">
                 {setupLink}
               </code>
               <Button
                 variant="secondary"
-                onClick={() => navigator.clipboard.writeText(setupLink)}
+                onClick={copyToClipboard}
                 className="shrink-0"
               >
-                Copy
+                {copied ? "✓ Copied!" : "Copy URL"}
               </Button>
+              {approvedUser && (
+                <a
+                  href={`mailto:${approvedUser.email}?subject=${encodeURIComponent("Welcome to VolkssKatt — Complete Your Account Setup")}&body=${encodeURIComponent(`Hello ${approvedUser.name},\n\nYour employee account request at VolkssKatt has been approved!\n\nPlease complete your account profile and password setup by clicking the secure link below:\n${setupLink}\n\nBest regards,\nVolkssKatt HR Team`)}`}
+                  className="brand-gradient-btn inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:opacity-95"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                  Send Email Invite
+                </a>
+              )}
             </div>
-            <p className="mt-2 text-xs text-emerald-600">
-              The employee will use this link to set their password and fill in their details.
-            </p>
           </Card>
         </div>
       )}
@@ -218,49 +271,44 @@ export default function RegistrationsPage() {
                     {r.firstName} {r.lastName}
                   </p>
                   <p className="text-xs text-slate-500">{r.email}</p>
-                  {r.phone && (
-                    <p className="text-xs text-slate-400">📞 {r.phone}</p>
-                  )}
+                  {r.phone && <p className="text-xs text-slate-400">{r.phone}</p>}
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <Badge tone={TONE_MAP[r.status]}>{r.status}</Badge>
-                  <p className="mt-1 text-[10px] text-slate-400">
-                    {new Date(r.createdAt).toLocaleDateString()}
-                  </p>
-                  {r.assignedEmployeeCode && (
-                    <p className="text-[10px] font-mono text-slate-400">
-                      {r.assignedEmployeeCode}
-                    </p>
-                  )}
-                </div>
+                <Badge tone={TONE_MAP[r.status]}>{r.status}</Badge>
+
+                {r.status === "approved" && r.assignedEmployeeCode && (
+                  <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                    {r.assignedEmployeeCode}
+                  </span>
+                )}
+
+                {r.status === "rejected" && r.rejectionReason && (
+                  <span className="text-xs text-red-500 max-w-xs truncate" title={r.rejectionReason}>
+                    {r.rejectionReason}
+                  </span>
+                )}
+
                 {r.status === "pending" && (
                   <div className="flex gap-2">
                     <Button
+                      size="sm"
                       onClick={() => {
                         setApproveModal(r);
-                        setError(null);
+                        approveForm.setValue("employeeCode", `EMP-${String(r.id).padStart(4, "0")}`);
                       }}
                     >
                       Approve
                     </Button>
                     <Button
-                      variant="danger"
-                      onClick={() => {
-                        setRejectModal(r);
-                        setError(null);
-                      }}
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setRejectModal(r)}
                     >
                       Reject
                     </Button>
                   </div>
-                )}
-                {r.status === "rejected" && r.rejectionReason && (
-                  <p className="max-w-[200px] text-xs text-red-500 italic">
-                    &quot;{r.rejectionReason}&quot;
-                  </p>
                 )}
               </div>
             </Card>
@@ -274,24 +322,19 @@ export default function RegistrationsPage() {
         onClose={() => setApproveModal(null)}
         title={`Approve ${approveModal?.firstName} ${approveModal?.lastName}`}
       >
-        <form
-          onSubmit={approveForm.handleSubmit(handleApprove)}
-          className="space-y-4"
-        >
-          <Field label="Employee Code">
+        <form onSubmit={approveForm.handleSubmit(handleApprove)} className="space-y-4">
+          <Field label="Employee Code" required>
             <input
               className={inputClass}
-              placeholder="e.g. EMP-0001"
               {...approveForm.register("employeeCode", { required: true })}
+              placeholder="e.g. EMP-0042"
             />
           </Field>
+
           <div className="grid grid-cols-2 gap-4">
             <Field label="Department">
-              <select
-                className={inputClass}
-                {...approveForm.register("departmentId")}
-              >
-                <option value="">— select —</option>
+              <select className={inputClass} {...approveForm.register("departmentId")}>
+                <option value="">-- select department --</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
@@ -299,18 +342,12 @@ export default function RegistrationsPage() {
                 ))}
               </select>
             </Field>
+
             <Field label="Designation">
-              <select
-                className={inputClass}
-                {...approveForm.register("designationId")}
-              >
-                <option value="">— select —</option>
+              <select className={inputClass} {...approveForm.register("designationId")}>
+                <option value="">-- select designation --</option>
                 {designations
-                  .filter(
-                    (d) =>
-                      !selectedDept ||
-                      String(d.departmentId) === selectedDept,
-                  )
+                  .filter((d) => !selectedDept || d.departmentId === Number(selectedDept))
                   .map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.title}
@@ -319,28 +356,23 @@ export default function RegistrationsPage() {
               </select>
             </Field>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Role">
-              <select className={inputClass} {...approveForm.register("role")}>
-                {[
-                  "employee",
-                  "team_lead",
-                  "department_manager",
-                  "hr_executive",
-                  "hr_admin",
-                  "finance_admin",
-                  "training_admin",
-                  "trainer",
-                  "auditor",
-                  "super_admin",
-                ].map((r) => (
-                  <option key={r} value={r}>
-                    {r.replace(/_/g, " ")}
-                  </option>
-                ))}
+            <Field label="Assigned Role" required>
+              <select className={inputClass} {...approveForm.register("role", { required: true })}>
+                <option value="employee">Employee</option>
+                <option value="hr_executive">HR Executive</option>
+                <option value="hr_admin">HR Admin</option>
+                <option value="department_manager">Department Manager</option>
+                <option value="team_lead">Team Lead</option>
+                <option value="finance_admin">Finance Admin</option>
+                <option value="training_admin">Training Admin</option>
+                <option value="trainer">Trainer</option>
+                <option value="auditor">Auditor</option>
               </select>
             </Field>
-            <Field label="Date of Joining">
+
+            <Field label="Date of Joining" required>
               <input
                 type="date"
                 className={inputClass}
@@ -348,14 +380,15 @@ export default function RegistrationsPage() {
               />
             </Field>
           </div>
-          {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-inset ring-red-200/50">
-              <span>⚠️</span> {error}
-            </div>
-          )}
-          <Button type="submit" className="w-full">
-            Approve & Create Account
-          </Button>
+
+          {error && <p className="text-xs text-red-600">{error}</p>}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" type="button" onClick={() => setApproveModal(null)}>
+              Cancel
+            </Button>
+            <Button type="submit">Approve & Generate Setup Link</Button>
+          </div>
         </form>
       </Modal>
 
@@ -363,28 +396,25 @@ export default function RegistrationsPage() {
       <Modal
         open={!!rejectModal}
         onClose={() => setRejectModal(null)}
-        title={`Reject ${rejectModal?.firstName} ${rejectModal?.lastName}?`}
+        title={`Reject ${rejectModal?.firstName} ${rejectModal?.lastName}`}
       >
-        <form
-          onSubmit={rejectForm.handleSubmit(handleReject)}
-          className="space-y-4"
-        >
-          <Field label="Reason for rejection">
+        <form onSubmit={rejectForm.handleSubmit(handleReject)} className="space-y-4">
+          <Field label="Reason for Rejection" required>
             <textarea
-              className={inputClass + " resize-none"}
-              rows={3}
-              placeholder="Please provide a reason..."
+              className={inputClass + " min-h-[80px]"}
               {...rejectForm.register("reason", { required: true })}
+              placeholder="Explain why this request is being rejected..."
             />
           </Field>
-          {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-inset ring-red-200/50">
-              <span>⚠️</span> {error}
-            </div>
-          )}
-          <Button type="submit" variant="danger" className="w-full">
-            Reject Registration
-          </Button>
+
+          {error && <p className="text-xs text-red-600">{error}</p>}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" type="button" onClick={() => setRejectModal(null)}>
+              Cancel
+            </Button>
+            <Button type="submit">Confirm Rejection</Button>
+          </div>
         </form>
       </Modal>
     </div>

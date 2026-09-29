@@ -18,12 +18,14 @@ async function main() {
     `);
     console.log("✅ registration_status enum created");
 
-    // 2. Add setup_token column to users table
+    // 2. Add setup_token and lockout columns to users table
     await client.query(`
       ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS setup_token varchar(128) UNIQUE;
+      ADD COLUMN IF NOT EXISTS setup_token varchar(128) UNIQUE,
+      ADD COLUMN IF NOT EXISTS failed_login_attempts integer NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS locked_until timestamp with time zone;
     `);
-    console.log("✅ setup_token column added to users");
+    console.log("✅ setup_token and security lockout columns added to users");
 
     // 3. Create registration_requests table
     await client.query(`

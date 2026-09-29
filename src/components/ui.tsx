@@ -129,6 +129,7 @@ export function Button({
   onClick,
   type = "button",
   variant = "primary",
+  size = "md",
   disabled,
   className = "",
 }: {
@@ -136,6 +137,7 @@ export function Button({
   onClick?: () => void;
   type?: "button" | "submit";
   variant?: "primary" | "secondary" | "danger" | "ghost";
+  size?: "sm" | "md" | "lg";
   disabled?: boolean;
   className?: string;
 }) {
@@ -149,12 +151,17 @@ export function Button({
     ghost:
       "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
   };
+  const sizes: Record<string, string> = {
+    sm: "px-3 py-1.5 text-xs rounded-lg gap-1.5",
+    md: "px-4 py-2.5 text-sm rounded-xl gap-2",
+    lg: "px-5 py-3 text-base rounded-xl gap-2.5",
+  };
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none ${variants[variant]} ${className}`}
+      className={`inline-flex items-center justify-center font-semibold transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none ${sizes[size]} ${variants[variant]} ${className}`}
     >
       {children}
     </button>
@@ -243,15 +250,18 @@ export function Table({
 /* ─── Field ─── */
 export function Field({
   label,
+  required = false,
   children,
 }: {
   label: string;
+  required?: boolean;
   children: ReactNode;
 }) {
   return (
     <div>
       <label className="mb-1.5 block text-sm font-medium text-slate-700">
         {label}
+        {required && <span className="ml-1 text-red-500">*</span>}
       </label>
       {children}
     </div>

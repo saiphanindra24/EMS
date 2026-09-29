@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
+import { put } from "@vercel/blob";
 import { HttpError } from "./api";
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -15,8 +16,11 @@ const ALLOWED_MIME_TYPES = new Set([
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
 /**
- * Validate + persist an uploaded file to `public/uploads/<subdir>`.
- * Returns the web-accessible URL along with basic file metadata.
+ * Validate + persist an uploaded file.
+ * Automatically supports:
+ * 1. @vercel/blob when BLOB_READ_WRITE_TOKEN is configured in production.
+ * 2. Local public/uploads directory during development.
+ * 3. Resilient Base64 Data URI fallback if the environment has a read-only filesystem.
  */
 export async function saveUploadedFile(file: File, subdir: string) {
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
@@ -29,19 +33,52 @@ export async function saveUploadedFile(file: File, subdir: string) {
     throw new HttpError("File exceeds the 5MB size limit", 400);
   }
 
-  const dir = path.join(process.cwd(), "public", "uploads", subdir);
-  await mkdir(dir, { recursive: true });
-
   const ext = path.extname(file.name) || "";
   const fileName = `${randomUUID()}${ext}`;
-  const filePath = path.join(dir, fileName);
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filePath, buffer);
 
-  return {
-    fileUrl: `/uploads/${subdir}/${fileName}`,
-    fileName: file.name,
-    fileSize: file.size,
-    mimeType: file.type,
-  };
+  // 1. Cloud Storage: Vercel Blob (if token available)
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      const blob = await put(`${subdir}/${fileName}`, file, {
+        access: "public",
+      });
+      return {
+        fileUrl: blob.url,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+      };
+    } catch (blobErr) {
+      console.warn("Vercel Blob upload failed, falling back to local/data storage:", blobErr);
+    }
+  }
+
+  // 2. Local Disk Storage (standard dev environment)
+  try {
+    const dir = path.join(process.cwd(), "public", "uploads", subdir);
+    await mkdir(dir, { recursive: true });
+    const filePath = path.join(dir, fileName);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await writeFile(filePath, buffer);
+
+    return {
+      fileUrl: `/uploads/${subdir}/${fileName}`,
+      fileName: file.name,
+      fileSize: file.size,
+      mimeType: file.type,
+    };
+  } catch (fsErr) {
+    // 3. Serverless Read-Only Filesystem Fallback (Data URI)
+    console.warn("Filesystem is read-only. Storing as Data URI fallback:", fsErr);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const base64 = buffer.toString("base64");
+    const dataUrl = `data:${file.type};base64,${base64}`;
+
+    return {
+      fileUrl: dataUrl,
+      fileName: file.name,
+      fileSize: file.size,
+      mimeType: file.type,
+    };
+  }
 }

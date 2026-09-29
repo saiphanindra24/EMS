@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api-client";
-import { PageHeader, Table, Badge, EmptyState } from "@/components/ui";
+import { PageHeader, Table, Badge, EmptyState, Button } from "@/components/ui";
+import { exportToCsv } from "@/lib/export";
 
 interface AttendanceRow {
   id: number;
@@ -33,9 +34,34 @@ export default function AttendancePage() {
     api.get<AttendanceRow[]>("/api/attendance").then(setRows);
   }, []);
 
+  const handleExport = () => {
+    exportToCsv("attendance-history", rows, [
+      { header: "Date", accessor: "date" },
+      { header: "Check In", accessor: (r) => (r.checkIn ? new Date(r.checkIn).toLocaleTimeString() : "") },
+      { header: "Check Out", accessor: (r) => (r.checkOut ? new Date(r.checkOut).toLocaleTimeString() : "") },
+      { header: "Working Hours", accessor: "workingHours" },
+      { header: "Overtime Hours", accessor: "overtimeHours" },
+      { header: "Late (Minutes)", accessor: "lateMinutes" },
+      { header: "Status", accessor: "status" },
+    ]);
+  };
+
   return (
     <div>
-      <PageHeader title="Attendance" description="Check-in/out history with computed working & overtime hours." />
+      <PageHeader
+        title="Attendance"
+        description="Check-in/out history with computed working & overtime hours."
+        actions={
+          rows.length > 0 ? (
+            <Button variant="secondary" onClick={handleExport}>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Export CSV
+            </Button>
+          ) : undefined
+        }
+      />
       {rows.length === 0 ? (
         <EmptyState message="No attendance records yet. Check in from the dashboard to get started." />
       ) : (
