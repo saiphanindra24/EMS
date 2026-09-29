@@ -34,9 +34,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-[#f0f2f5]">
+    <div className="flex min-h-screen relative overflow-hidden bg-slate-50">
+      {/* Animated Background Mesh & Orbs */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-violet-400/20 blur-[120px] mix-blend-multiply animate-pulse-glow" style={{ animationDuration: '8s' }} />
+        <div className="absolute -right-[10%] top-[20%] h-[30%] w-[30%] rounded-full bg-fuchsia-400/20 blur-[100px] mix-blend-multiply animate-pulse-glow" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+        <div className="absolute bottom-[-10%] left-[20%] h-[40%] w-[40%] rounded-full bg-indigo-400/20 blur-[120px] mix-blend-multiply animate-pulse-glow" style={{ animationDuration: '12s', animationDelay: '4s' }} />
+      </div>
+
       <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden relative z-10">
         {/* Animated gradient accent bar */}
         <div
           className="h-[3px] w-full"
@@ -47,7 +54,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           }}
         />
         <Topbar />
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">{children}</main>
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8 relative">{children}</main>
       </div>
     </div>
   );

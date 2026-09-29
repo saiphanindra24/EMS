@@ -15,7 +15,7 @@ export function Topbar() {
 
   return (
     <>
-      <header className="flex h-[72px] items-center justify-between border-b border-slate-200/80 bg-white/80 px-6 backdrop-blur-lg">
+      <header className="flex h-[72px] items-center justify-between border-b border-slate-200/80 glass px-6">
         <div className="animate-fade-in">
           <p className="text-xs font-medium text-slate-400">Welcome back,</p>
           <p className="text-base font-semibold text-slate-900">

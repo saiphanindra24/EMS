@@ -39,9 +39,9 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-300 ${
+      className={`glass rounded-2xl p-6 shadow-sm transition-all duration-300 ${
         hover
-          ? "hover:shadow-lg hover:border-violet-200/50 hover:-translate-y-0.5 cursor-pointer"
+          ? "hover:shadow-xl hover:border-violet-300/50 hover:-translate-y-1 cursor-pointer"
           : ""
       } ${className}`}
     >
@@ -190,7 +190,7 @@ export function Modal({
       />
 
       {/* Panel */}
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xl animate-scale-in">
+      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl glass p-6 shadow-[0_20px_60px_rgba(0,0,0,0.15)] animate-scale-in">
         <div className="mb-5 flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-900">{title}</h3>
           <button
@@ -227,7 +227,7 @@ export function Table({
   children: ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm animate-fade-in-up">
+    <div className="overflow-x-auto rounded-2xl glass shadow-sm animate-fade-in-up">
       <table className="min-w-full divide-y divide-slate-100 text-sm">
         <thead>
           <tr className="bg-slate-50/80">
