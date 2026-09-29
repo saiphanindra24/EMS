@@ -19,7 +19,7 @@ import {
   canViewFinancialData,
 } from "@/lib/rbac";
 import { ROLES } from "@/lib/rbac";
-import { MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT } from "@/lib/password";
+import { MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT, validatePasswordStrength } from "@/lib/password";
 
 const FINANCIAL_FIELDS = ["bankAccountNumber", "bankName", "bankIfsc", "pan", "uan", "salary"] as const;
 
@@ -162,6 +162,12 @@ export async function POST(req: Request) {
       throw new HttpError("Only HR/Admin roles can create employees", 403);
     }
     const body = await parseBody(req, createEmployeeSchema);
+
+    // Validate password strength
+    const strengthError = validatePasswordStrength(body.password);
+    if (strengthError) {
+      throw new HttpError(strengthError, 422);
+    }
 
     const existing = await db.select().from(users).where(eq(users.email, body.email.toLowerCase()));
     if (existing.length) throw new HttpError("A user with this email already exists", 409);

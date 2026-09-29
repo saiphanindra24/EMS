@@ -15,7 +15,7 @@ import { hashPassword } from "../src/lib/auth";
 import { eq } from "drizzle-orm";
 
 // ⚠️ Change these to your real admin credentials before running!
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@volksskatt.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "superadmin@volksskatt.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123";
 
 async function main() {

@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { apiSuccess, requireAuth, withErrorHandling, HttpError, audit } from "@/lib/api";
 import { parseBody } from "@/lib/validate";
-import { MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT } from "@/lib/password";
+import { MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT, validatePasswordStrength } from "@/lib/password";
 
 const schema = z.object({
   currentPassword: z.string().min(1),
@@ -17,6 +17,12 @@ export async function POST(req: Request) {
   return withErrorHandling(async () => {
     const session = await requireAuth();
     const body = await parseBody(req, schema);
+
+    // Server-side password strength check
+    const strengthError = validatePasswordStrength(body.newPassword);
+    if (strengthError) {
+      throw new HttpError(strengthError, 422);
+    }
 
     const [user] = await db.select().from(users).where(eq(users.id, session.userId));
     if (!user) throw new HttpError("User not found", 404);

@@ -4,8 +4,16 @@ import { cookies } from "next/headers";
 import type { Role } from "./rbac";
 
 const AUTH_COOKIE = "ems_token";
-const secretValue = process.env.JWT_SECRET || "dev-only-insecure-secret-change-me";
-const secret = new TextEncoder().encode(secretValue);
+
+function getJwtSecret(): Uint8Array {
+  const val = process.env.JWT_SECRET;
+  if (!val && process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET environment variable is required in production");
+  }
+  return new TextEncoder().encode(val || "dev-only-insecure-secret-change-me");
+}
+
+const secret = getJwtSecret();
 
 export interface AuthTokenPayload {
   userId: number;

@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { api, ApiClientError } from "@/lib/api-client";
 import { useAuth } from "@/components/AuthProvider";
 import { PageHeader, Table, Badge, Button, Modal, Field, inputClass, EmptyState } from "@/components/ui";
-import { MIN_PASSWORD_LENGTH, PASSWORD_HINT, PASSWORD_TOO_SHORT } from "@/lib/password";
+import { MIN_PASSWORD_LENGTH, PASSWORD_HINT, PASSWORD_TOO_SHORT, validatePasswordStrength } from "@/lib/password";
+import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 
 interface EmployeeRow {
   id: number;
@@ -77,6 +78,12 @@ export default function EmployeesPage() {
 
   const onSubmit = async (values: CreateForm) => {
     setError(null);
+    const strengthError = validatePasswordStrength(values.password);
+    if (strengthError) {
+      setError(strengthError);
+      return;
+    }
+
     try {
       await api.post("/api/employees", {
         ...values,
@@ -194,9 +201,12 @@ export default function EmployeesPage() {
           <Field label="Login email">
             <input type="email" className={inputClass} {...register("email", { required: true })} />
           </Field>
-          <Field label="Temporary password">
-            <input type="password" className={inputClass} {...register("password", { required: true, minLength: 8 })} />
-          </Field>
+          <div>
+            <Field label="Temporary password">
+              <input type="password" className={inputClass} {...register("password", { required: true, minLength: 8 })} placeholder="••••••••" />
+            </Field>
+            {watch("password") && <PasswordStrengthIndicator password={watch("password")} />}
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Department">
               <select className={inputClass} {...register("departmentId")}>

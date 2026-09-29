@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { apiSuccess, withErrorHandling, HttpError } from "@/lib/api";
 import { hashPassword, signToken, setAuthCookie } from "@/lib/auth";
 import { parseBody } from "@/lib/validate";
-import { MIN_PASSWORD_LENGTH } from "@/lib/password";
+import { MIN_PASSWORD_LENGTH, validatePasswordStrength } from "@/lib/password";
 
 const setupSchema = z.object({
   password: z.string().min(MIN_PASSWORD_LENGTH, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`),
@@ -55,6 +55,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   return withErrorHandling(async () => {
     const { token } = await params;
     const body = await parseBody(req, setupSchema);
+
+    // Server-side password strength check
+    const strengthError = validatePasswordStrength(body.password);
+    if (strengthError) {
+      throw new HttpError(strengthError, 422);
+    }
 
     const [user] = await db
       .select()

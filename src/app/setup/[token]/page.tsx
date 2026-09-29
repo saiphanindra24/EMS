@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { api, ApiClientError } from "@/lib/api-client";
 import { useAuth } from "@/components/AuthProvider";
 import { BrandLogo } from "@/components/BrandLogo";
-import { MIN_PASSWORD_LENGTH, PASSWORD_HINT } from "@/lib/password";
+import { MIN_PASSWORD_LENGTH, PASSWORD_HINT, validatePasswordStrength } from "@/lib/password";
+import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 
 interface SetupInfo {
   email: string;
@@ -68,6 +69,13 @@ export default function SetupPage({ params }: { params: Promise<{ token: string 
 
   const onSubmit = async (values: SetupForm) => {
     setSubmitError(null);
+
+    const strengthError = validatePasswordStrength(values.password);
+    if (strengthError) {
+      setSubmitError(strengthError);
+      return;
+    }
+
     setSubmitting(true);
     try {
       await api.post(`/api/auth/setup/${token}`, {
@@ -238,6 +246,7 @@ export default function SetupPage({ params }: { params: Promise<{ token: string 
                           )}
                         </div>
                       </div>
+                      {password && <PasswordStrengthIndicator password={password} />}
                     </div>
 
                     {/* Personal details */}

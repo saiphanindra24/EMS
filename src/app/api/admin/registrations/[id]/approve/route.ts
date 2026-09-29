@@ -47,52 +47,57 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const setupToken = uuidv4();
     const tempPasswordHash = await hashPassword(uuidv4()); // random unguessable temp password
 
-    // Create user
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        email: request.email,
-        passwordHash: tempPasswordHash,
-        role: body.role as typeof users.role.enumValues[number],
-        isActive: true,
-        mustChangePassword: true,
-        setupToken,
-      })
-      .returning();
+    // Wrap all writes in a transaction so partial failures don't leave corrupt data
+    const result = await db.transaction(async (tx) => {
+      // Create user
+      const [newUser] = await tx
+        .insert(users)
+        .values({
+          email: request.email,
+          passwordHash: tempPasswordHash,
+          role: body.role as typeof users.role.enumValues[number],
+          isActive: true,
+          mustChangePassword: true,
+          setupToken,
+        })
+        .returning();
 
-    // Create employee record
-    const [newEmployee] = await db
-      .insert(employees)
-      .values({
-        userId: newUser.id,
-        employeeCode: body.employeeCode,
-        firstName: request.firstName,
-        lastName: request.lastName,
-        dateOfJoining: body.dateOfJoining,
-        departmentId: body.departmentId ?? null,
-        designationId: body.designationId ?? null,
-        phone: request.phone,
-        employmentType: "full_time",
-        employmentStatus: "active",
-        workLocation: "onsite",
-        shift: "general",
-      })
-      .returning();
+      // Create employee record
+      const [newEmployee] = await tx
+        .insert(employees)
+        .values({
+          userId: newUser.id,
+          employeeCode: body.employeeCode,
+          firstName: request.firstName,
+          lastName: request.lastName,
+          dateOfJoining: body.dateOfJoining,
+          departmentId: body.departmentId ?? null,
+          designationId: body.designationId ?? null,
+          phone: request.phone,
+          employmentType: "full_time",
+          employmentStatus: "active",
+          workLocation: "onsite",
+          shift: "general",
+        })
+        .returning();
 
-    // Update registration request
-    await db
-      .update(registrationRequests)
-      .set({
-        status: "approved",
-        reviewedBy: session.userId,
-        reviewedAt: new Date(),
-        assignedEmployeeCode: body.employeeCode,
-        assignedDepartmentId: body.departmentId ?? null,
-        assignedDesignationId: body.designationId ?? null,
-        assignedRole: body.role as typeof registrationRequests.assignedRole.enumValues[number],
-        createdUserId: newUser.id,
-      })
-      .where(eq(registrationRequests.id, regId));
+      // Update registration request
+      await tx
+        .update(registrationRequests)
+        .set({
+          status: "approved",
+          reviewedBy: session.userId,
+          reviewedAt: new Date(),
+          assignedEmployeeCode: body.employeeCode,
+          assignedDepartmentId: body.departmentId ?? null,
+          assignedDesignationId: body.designationId ?? null,
+          assignedRole: body.role as typeof registrationRequests.assignedRole.enumValues[number],
+          createdUserId: newUser.id,
+        })
+        .where(eq(registrationRequests.id, regId));
+
+      return { newUser, newEmployee };
+    });
 
     await audit({
       userId: session.userId,
@@ -103,8 +108,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
 
     return apiSuccess({
-      user: { id: newUser.id, email: newUser.email },
-      employee: { id: newEmployee.id, employeeCode: newEmployee.employeeCode },
+      user: { id: result.newUser.id, email: result.newUser.email },
+      employee: { id: result.newEmployee.id, employeeCode: result.newEmployee.employeeCode },
       setupToken,
       setupUrl: `/setup/${setupToken}`,
     });

@@ -2,8 +2,9 @@ import { z } from "zod";
 import { db } from "@/db";
 import { registrationRequests, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { apiSuccess, withErrorHandling, HttpError } from "@/lib/api";
+import { apiSuccess, withErrorHandling, HttpError, getIp } from "@/lib/api";
 import { parseBody } from "@/lib/validate";
+import { registerLimiter } from "@/lib/rate-limit";
 
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -15,6 +16,17 @@ const registerSchema = z.object({
 // POST /api/auth/register - submit a new employee registration request.
 export async function POST(req: Request) {
   return withErrorHandling(async () => {
+    // Rate limiting by IP
+    const ip = getIp(req) || "unknown";
+    const rateCheck = registerLimiter.check(ip);
+    if (!rateCheck.allowed) {
+      const retryAfterSec = Math.ceil(rateCheck.retryAfterMs / 1000);
+      throw new HttpError(
+        `Too many registration attempts. Please try again in ${retryAfterSec} seconds.`,
+        429,
+      );
+    }
+
     const body = await parseBody(req, registerSchema);
     const emailLower = body.email.toLowerCase().trim();
 
