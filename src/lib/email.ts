@@ -41,6 +41,17 @@ export async function sendEmail({
       const data = await res.json();
       if (!res.ok) {
         console.error("Resend API error:", data);
+
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("[Email] Falling back to dev preview because Resend rejected the request.");
+          console.log("────────────────────────────────────────────────────────────");
+          console.log(`✉️  [EMAIL DISPATCH] To: ${to}`);
+          console.log(`📌  Subject: ${subject}`);
+          console.log(`👤  From: ${from}`);
+          console.log("────────────────────────────────────────────────────────────");
+          return { success: true, id: "dev-preview-logged" };
+        }
+
         return { success: false, error: data.message || "Failed to send email via Resend" };
       }
 
@@ -48,6 +59,17 @@ export async function sendEmail({
       return { success: true, id: data.id };
     } catch (err: unknown) {
       console.error("Failed to dispatch email via Resend:", err);
+
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[Email] Falling back to dev preview because Resend was unreachable.");
+        console.log("────────────────────────────────────────────────────────────");
+        console.log(`✉️  [EMAIL DISPATCH] To: ${to}`);
+        console.log(`📌  Subject: ${subject}`);
+        console.log(`👤  From: ${from}`);
+        console.log("────────────────────────────────────────────────────────────");
+        return { success: true, id: "dev-preview-logged" };
+      }
+
       return { success: false, error: String(err) };
     }
   }

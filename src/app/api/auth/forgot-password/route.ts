@@ -48,8 +48,12 @@ export async function POST(req: Request) {
       html: emailTemplates.passwordReset({ name: displayName, resetUrl }).html,
     });
 
-    if (!success) {
+    if (!success && process.env.NODE_ENV === "production") {
       throw new HttpError("Unable to send password reset email right now. Please try again later.", 500);
+    }
+
+    if (!success) {
+      console.warn("Password reset email delivery failed in non-production mode; returning success so the reset flow can still be demoed.");
     }
 
     return apiSuccess({
