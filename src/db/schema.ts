@@ -215,6 +215,8 @@ export const users = pgTable("users", {
   isActive: boolean("is_active").notNull().default(true),
   mustChangePassword: boolean("must_change_password").notNull().default(false),
   setupToken: varchar("setup_token", { length: 128 }).unique(),
+  resetPasswordToken: varchar("reset_password_token", { length: 128 }).unique(),
+  resetPasswordExpiresAt: timestamp("reset_password_expires_at", { withTimezone: true }),
   failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
   lockedUntil: timestamp("locked_until", { withTimezone: true }),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),

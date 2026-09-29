@@ -56,26 +56,35 @@ function WorkTimer({
   checkInTime: string;
   checkedOut: boolean;
 }) {
+  const storedBreak = (() => {
+    if (typeof window === "undefined") {
+      return { accumulated: 0, breakStart: null, onBreak: false };
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const stored = window.localStorage.getItem(`ems-break-${today}`);
+    if (!stored) {
+      return { accumulated: 0, breakStart: null, onBreak: false };
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as { accumulated?: number; breakStart?: number | null };
+      return {
+        accumulated: parsed.accumulated || 0,
+        breakStart: parsed.breakStart ?? null,
+        onBreak: Boolean(parsed.breakStart && !checkedOut),
+      };
+    } catch {
+      return { accumulated: 0, breakStart: null, onBreak: false };
+    }
+  })();
+
   const [workSeconds, setWorkSeconds] = useState(0);
   const [breakSeconds, setBreakSeconds] = useState(0);
-  const [onBreak, setOnBreak] = useState(false);
-  const breakAccumulatedRef = useRef(0);
-  const breakStartRef = useRef<number | null>(null);
+  const [onBreak, setOnBreak] = useState(storedBreak.onBreak);
+  const breakAccumulatedRef = useRef(storedBreak.accumulated);
+  const breakStartRef = useRef<number | null>(storedBreak.breakStart);
   const checkInMs = useRef(new Date(checkInTime).getTime());
-
-  // Load break state from localStorage on mount
-  useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    const stored = localStorage.getItem(`ems-break-${today}`);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      breakAccumulatedRef.current = parsed.accumulated || 0;
-      if (parsed.breakStart && !checkedOut) {
-        breakStartRef.current = parsed.breakStart;
-        setOnBreak(true);
-      }
-    }
-  }, [checkedOut]);
 
   // Persist break state to localStorage
   const persistBreak = useCallback(() => {
@@ -346,7 +355,11 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    load();
+    const timeoutId = setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const doCheckIn = async () => {

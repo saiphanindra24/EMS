@@ -103,6 +103,40 @@ export const emailTemplates = {
     `,
   }),
 
+  passwordReset: ({
+    name,
+    resetUrl,
+  }: {
+    name: string;
+    resetUrl: string;
+  }) => ({
+    subject: "Reset Your VolkssKatt Password",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #4f46e5; margin: 0; font-size: 24px;">VolkssKatt EMS</h2>
+          <p style="color: #64748b; font-size: 13px; margin: 4px 0 0 0;">Password Reset Request</p>
+        </div>
+
+        <p style="color: #1e293b; font-size: 16px; line-height: 24px;">Hello <strong>${name}</strong>,</p>
+        <p style="color: #475569; font-size: 14px; line-height: 22px;">
+          We received a request to reset your password. Use the button below to choose a new password. This link is valid for 1 hour.
+        </p>
+
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${resetUrl}" style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 12px; font-weight: bold; font-size: 14px; display: inline-block;">
+            Reset Password →
+          </a>
+        </div>
+
+        <p style="color: #94a3b8; font-size: 12px; line-height: 18px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+          If the button doesn't work, copy and paste this URL into your browser:<br/>
+          <a href="${resetUrl}" style="color: #6366f1; word-break: break-all;">${resetUrl}</a>
+        </p>
+      </div>
+    `,
+  }),
+
   /**
    * Leave Application Status Update
    */

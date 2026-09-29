@@ -63,7 +63,11 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   };
 
   useEffect(() => {
-    load();
+    const timeoutId = setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [id]);
 
   if (!data) return <p className="text-slate-400">Loading...</p>;

@@ -25,13 +25,17 @@ export default function ReportsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setError(null);
-    setLoading(true);
-    api
-      .get<{ breakdown: ReportRow[] }>(`/api/reports?type=${type}`)
-      .then((res) => setRows(res.breakdown))
-      .catch((e) => setError(e instanceof ApiClientError ? e.message : "Failed to load report"))
-      .finally(() => setLoading(false));
+    const timeoutId = setTimeout(() => {
+      setError(null);
+      setLoading(true);
+      void api
+        .get<{ breakdown: ReportRow[] }>(`/api/reports?type=${type}`)
+        .then((res) => setRows(res.breakdown))
+        .catch((e) => setError(e instanceof ApiClientError ? e.message : "Failed to load report"))
+        .finally(() => setLoading(false));
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [type]);
 
   const headers = rows.length ? Object.keys(rows[0]) : [];
