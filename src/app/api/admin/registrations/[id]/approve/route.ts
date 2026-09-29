@@ -45,6 +45,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       throw new HttpError("A user with this email already exists", 409);
     }
 
+    // Check employeeCode not taken
+    const [existingEmployee] = await db
+      .select()
+      .from(employees)
+      .where(eq(employees.employeeCode, body.employeeCode));
+    if (existingEmployee) {
+      throw new HttpError(`Employee code ${body.employeeCode} is already taken`, 409);
+    }
+
     // Generate a setup token so the employee can set their own password
     const setupToken = uuidv4();
     const tempPasswordHash = await hashPassword(uuidv4()); // random unguessable temp password
