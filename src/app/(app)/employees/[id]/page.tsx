@@ -74,7 +74,8 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
 
   const isSelf = self?.id === data.id;
   const canSeeFinancial = user && (FINANCE_VISIBLE_ROLES.includes(user.role) || isSelf);
-  const canEdit = user && (["super_admin", "hr_admin", "hr_executive"].includes(user.role) || isSelf);
+  const isHr = user && ["super_admin", "hr_admin", "hr_executive"].includes(user.role);
+  const canEdit = isHr || isSelf;
 
   const save = async () => {
     setError(null);
@@ -89,17 +90,33 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
+  const resendInvitation = async () => {
+    try {
+      await api.post(`/api/employees/${id}/resend-invitation`);
+      alert("Invitation sent successfully.");
+    } catch (e) {
+      alert(e instanceof ApiClientError ? e.message : "Failed to resend invitation");
+    }
+  };
+
   return (
     <div>
       <PageHeader
         title={`${data.firstName} ${data.lastName}`}
         description={`${data.employeeCode} • ${data.designationTitle ?? "No designation"} • ${data.departmentName ?? "No department"}`}
         actions={
-          canEdit && (
-            <Button variant={editing ? "secondary" : "primary"} onClick={() => setEditing((v) => !v)}>
-              {editing ? "Cancel" : "Edit profile"}
-            </Button>
-          )
+          <div className="flex gap-2">
+            {isHr && (
+              <Button variant="secondary" onClick={resendInvitation}>
+                Resend Invitation
+              </Button>
+            )}
+            {canEdit && (
+              <Button variant={editing ? "secondary" : "primary"} onClick={() => setEditing((v) => !v)}>
+                {editing ? "Cancel" : "Edit profile"}
+              </Button>
+            )}
+          </div>
         }
       />
 
