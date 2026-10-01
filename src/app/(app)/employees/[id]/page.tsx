@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState, use as usePromise } from "react";
 import { api, ApiClientError } from "@/lib/api-client";
 import { useAuth } from "@/components/AuthProvider";
@@ -48,6 +49,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   const [form, setForm] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const router = useRouter();
 
   const load = async () => {
     const res = await api.get<EmployeeDetail>(`/api/employees/${id}`);
@@ -99,6 +101,17 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
+  const removeEmployee = async () => {
+    if (!confirm("Are you sure you want to deactivate and remove this employee? This will prevent them from logging in.")) return;
+    try {
+      await api.delete(`/api/employees/${id}`);
+      alert("Employee deactivated successfully.");
+      router.push("/employees");
+    } catch (e) {
+      alert(e instanceof ApiClientError ? e.message : "Failed to remove employee");
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -107,9 +120,14 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
         actions={
           <div className="flex gap-2">
             {isHr && (
-              <Button variant="secondary" onClick={resendInvitation}>
-                Resend Invitation
-              </Button>
+              <>
+                <Button variant="secondary" onClick={resendInvitation}>
+                  Resend Invitation
+                </Button>
+                <Button variant="secondary" onClick={removeEmployee}>
+                  <span className="text-red-600">Deactivate</span>
+                </Button>
+              </>
             )}
             {canEdit && (
               <Button variant={editing ? "secondary" : "primary"} onClick={() => setEditing((v) => !v)}>
