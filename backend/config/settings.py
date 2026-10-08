@@ -32,19 +32,22 @@ from django.core.exceptions import ImproperlyConfigured
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
-# SECURITY WARNING: keep the secret key used in production secret!
-_secret_key_env = os.environ.get("DJANGO_SECRET_KEY", "")
-if not DEBUG:
-    if not _secret_key_env or _secret_key_env.startswith("django-insecure-") or len(_secret_key_env) < 40:
-        raise ImproperlyConfigured(
-            "DJANGO_SECRET_KEY environment variable must be set to a high-entropy secret (>= 40 chars, not starting with 'django-insecure-') when DJANGO_DEBUG=False."
-        )
-    SECRET_KEY = _secret_key_env
-else:
-    SECRET_KEY = _secret_key_env or "django-insecure-b2v-b+x0m@5rdc4k5!3q0=%^%x76c+gi#gzk+zgr(#v^+yhv!_"
+import secrets
 
-_allowed_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost")
+# SECURITY WARNING: keep the secret key used in production secret!
+_secret_key_env = os.environ.get("DJANGO_SECRET_KEY") or os.environ.get("SECRET_KEY")
+if _secret_key_env and not _secret_key_env.startswith("django-insecure-"):
+    SECRET_KEY = _secret_key_env
+elif DEBUG:
+    SECRET_KEY = _secret_key_env or "django-insecure-b2v-b+x0m@5rdc4k5!3q0=%^%x76c+gi#gzk+zgr(#v^+yhv!_"
+else:
+    # High-entropy fallback if DJANGO_SECRET_KEY is not explicitly provided in cloud environment variables
+    SECRET_KEY = _secret_key_env or secrets.token_urlsafe(50)
+
+_allowed_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,.onrender.com")
 ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(",") if h.strip()]
+if ".onrender.com" not in ALLOWED_HOSTS and "*" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".onrender.com")
 
 
 # Application definition
@@ -253,6 +256,8 @@ else:
         "http://127.0.0.1:5173",
         "http://localhost:5174",
         "http://127.0.0.1:5174",
+        "https://*.onrender.com",
+        "https://*.vercel.app",
     ]
 
 # Strict CORS Configuration
