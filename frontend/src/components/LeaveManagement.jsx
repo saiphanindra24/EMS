@@ -84,7 +84,7 @@ export default function LeaveManagement() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, statusFilter, typeFilter, roles, isHRAdmin]);
+  }, [activeTab, statusFilter, typeFilter, isManager, isHRorSuperAdmin]);
 
   useEffect(() => {
     fetchLeaves();
@@ -215,7 +215,7 @@ export default function LeaveManagement() {
               My Leaves
             </button>
 
-            {isHRAdmin && (
+            {isHRorSuperAdmin && (
               <button
                 className={`tab-btn ${activeTab === "all" ? "active" : ""}`}
                 onClick={() => {

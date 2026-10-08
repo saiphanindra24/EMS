@@ -13,8 +13,8 @@ echo "[*] Running database migrations..."
 if [ -n "$DATABASE_URL" ]; then
     python manage.py migrate --no-input
     echo "[*] Seeding default database records..."
-    python manage.py seed_leave_types || true
     python manage.py seed_employees || true
+    python manage.py seed_leave_types || true
     python manage.py seed_tasks || true
 else
     echo "[!] Notice: DATABASE_URL not detected in build environment. Skipping build-time migrations."
