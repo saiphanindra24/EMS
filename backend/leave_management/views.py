@@ -340,25 +340,31 @@ class LeaveBalanceViewSet(viewsets.ReadOnlyModelViewSet):
 
         qs = LeaveBalance.objects.select_related("employee", "employee__user", "leave_type")
 
-        if user.is_super_admin or user.is_hr_admin:
-            employee_id = self.request.query_params.get("employee")
-            if employee_id:
+        scope = self.request.query_params.get("scope")
+        employee_id = self.request.query_params.get("employee")
+
+        if employee_id:
+            if user.is_super_admin or user.is_hr_admin:
                 qs = qs.filter(employee_id=employee_id)
-        elif user.role == Role.MANAGER:
-            manager_profile = getattr(user, "employee_profile", None)
-            employee_id = self.request.query_params.get("employee")
-            if employee_id and manager_profile:
-                qs = qs.filter(
-                    Q(employee_id=employee_id, employee__manager=manager_profile)
-                    | Q(employee=manager_profile)
-                )
-            elif manager_profile:
-                qs = qs.filter(
-                    Q(employee=manager_profile) | Q(employee__manager=manager_profile)
-                )
+            elif user.role == Role.MANAGER:
+                manager_profile = getattr(user, "employee_profile", None)
+                if manager_profile:
+                    qs = qs.filter(
+                        Q(employee_id=employee_id, employee__manager=manager_profile)
+                        | Q(employee=manager_profile, employee_id=employee_id)
+                    )
+                else:
+                    return LeaveBalance.objects.none()
             else:
-                qs = qs.none()
+                if hasattr(user, "employee_profile") and str(user.employee_profile.id) == str(employee_id):
+                    qs = qs.filter(employee=user.employee_profile)
+                else:
+                    return LeaveBalance.objects.none()
+        elif scope == "all" and (user.is_super_admin or user.is_hr_admin):
+            # Explicitly requested all company balances
+            pass
         else:
+            # Default: Personal balances for the logged-in user
             if hasattr(user, "employee_profile"):
                 qs = qs.filter(employee=user.employee_profile)
             else:

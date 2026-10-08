@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { leaveService } from "../services/leaveService";
 import LeaveDetailModal from "./LeaveDetailModal";
@@ -29,12 +29,42 @@ export default function LeaveManagement() {
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
 
+  // Date range filters
+  const [startDateFilter, setStartDateFilter] = useState("");
+  const [endDateFilter, setEndDateFilter] = useState("");
+  const [datePreset, setDatePreset] = useState("all");
+
+  // Calendar month/year navigation
+  const [calendarDate, setCalendarDate] = useState(() => new Date());
+
   // Modals state
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState(null);
   const [rejectRequestId, setRejectRequestId] = useState(null);
 
-  // Load static types and balances
+  // Deduplicate leave types and balances to ensure no duplicated items
+  const uniqueLeaveTypes = useMemo(() => {
+    const map = new Map();
+    for (const t of leaveTypes) {
+      if (t && t.id && !map.has(t.id)) {
+        map.set(t.id, t);
+      }
+    }
+    return Array.from(map.values());
+  }, [leaveTypes]);
+
+  const uniqueBalances = useMemo(() => {
+    const map = new Map();
+    for (const b of balances) {
+      const key = b?.leave_type_id || b?.leave_type?.id || b?.leave_type_code || b?.id;
+      if (key && !map.has(key)) {
+        map.set(key, b);
+      }
+    }
+    return Array.from(map.values());
+  }, [balances]);
+
+  // Load static types, balances, and summary
   useEffect(() => {
     leaveService.getLeaveTypes({ active_only: "true" })
       .then(setLeaveTypes)
@@ -56,7 +86,15 @@ export default function LeaveManagement() {
 
     try {
       if (activeTab === "calendar") {
-        const calData = await leaveService.getLeaveCalendar();
+        const y = calendarDate.getFullYear();
+        const m = calendarDate.getMonth();
+        const firstDay = new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10);
+        const lastDay = new Date(Date.UTC(y, m + 1, 0)).toISOString().slice(0, 10);
+
+        const calData = await leaveService.getLeaveCalendar({
+          start_date: firstDay,
+          end_date: lastDay,
+        });
         setCalendarLeaves(calData);
         setIsLoading(false);
         return;
@@ -65,6 +103,8 @@ export default function LeaveManagement() {
       const params = {};
       if (statusFilter) params.status = statusFilter;
       if (typeFilter) params.leave_type = typeFilter;
+      if (startDateFilter) params.start_date = startDateFilter;
+      if (endDateFilter) params.end_date = endDateFilter;
 
       if (activeTab === "my") {
         params.scope = "my";
@@ -74,7 +114,7 @@ export default function LeaveManagement() {
           params.scope = "team";
         }
       } else if (activeTab === "all") {
-        // all leaves
+        // all company leaves
       }
 
       const data = await leaveService.getLeaves(params);
@@ -84,13 +124,65 @@ export default function LeaveManagement() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, statusFilter, typeFilter, isManager, isHRorSuperAdmin]);
+  }, [
+    activeTab,
+    statusFilter,
+    typeFilter,
+    startDateFilter,
+    endDateFilter,
+    calendarDate,
+    isManager,
+    isHRorSuperAdmin,
+  ]);
 
   useEffect(() => {
     fetchLeaves();
   }, [fetchLeaves]);
 
-  // Refresh summary when actions occur
+  // Date range presets helper
+  const handleDatePreset = (preset) => {
+    setDatePreset(preset);
+    const now = new Date();
+    if (preset === "all") {
+      setStartDateFilter("");
+      setEndDateFilter("");
+    } else if (preset === "this_month") {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      setStartDateFilter(start.toISOString().slice(0, 10));
+      setEndDateFilter(end.toISOString().slice(0, 10));
+    } else if (preset === "next_month") {
+      const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+      setStartDateFilter(start.toISOString().slice(0, 10));
+      setEndDateFilter(end.toISOString().slice(0, 10));
+    } else if (preset === "next_30") {
+      const end = new Date();
+      end.setDate(now.getDate() + 30);
+      setStartDateFilter(now.toISOString().slice(0, 10));
+      setEndDateFilter(end.toISOString().slice(0, 10));
+    } else if (preset === "past_30") {
+      const start = new Date();
+      start.setDate(now.getDate() - 30);
+      setStartDateFilter(start.toISOString().slice(0, 10));
+      setEndDateFilter(now.toISOString().slice(0, 10));
+    } else if (preset === "this_year") {
+      const start = new Date(now.getFullYear(), 0, 1);
+      const end = new Date(now.getFullYear(), 11, 31);
+      setStartDateFilter(start.toISOString().slice(0, 10));
+      setEndDateFilter(end.toISOString().slice(0, 10));
+    }
+  };
+
+  const handleClearFilters = () => {
+    setStatusFilter("");
+    setTypeFilter("");
+    setStartDateFilter("");
+    setEndDateFilter("");
+    setDatePreset("all");
+  };
+
+  // Refresh summary and balances when actions occur
   const refreshAll = () => {
     fetchLeaves();
     leaveService.getLeaveSummary().then(setSummary).catch(() => {});
@@ -159,16 +251,16 @@ export default function LeaveManagement() {
         </div>
       </section>
 
-      {/* ─── Configurable Leave Balances (if assigned to employee) ──────── */}
-      {balances && balances.length > 0 && (
+      {/* ─── Configurable Leave Balances (Personal Allowances) ──────────── */}
+      {uniqueBalances && uniqueBalances.length > 0 && (
         <section className="leave-balances-strip">
           <div className="balances-head">
             <h4>My Annual Leave Allowances ({new Date().getFullYear()})</h4>
-            <span className="field-hint">Configured policy balances</span>
+            <span className="field-hint">Configured policy balances ({uniqueBalances.length} categories)</span>
           </div>
           <div className="balances-grid">
-            {balances.map((b) => (
-              <div key={b.id} className="balance-pill-card">
+            {uniqueBalances.map((b) => (
+              <div key={b.id || b.leave_type_name} className="balance-pill-card">
                 <div className="balance-title">
                   <span>{b.leave_type_name}</span>
                   <span className="paid-tag paid">Quota</span>
@@ -252,6 +344,7 @@ export default function LeaveManagement() {
                   className="filter-select"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
+                  title="Filter by status"
                 >
                   <option value="">All Statuses</option>
                   <option value="PENDING">Pending</option>
@@ -265,14 +358,69 @@ export default function LeaveManagement() {
                 className="filter-select"
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
+                title="Filter by category"
               >
                 <option value="">All Leave Categories</option>
-                {leaveTypes.map((t) => (
+                {uniqueLeaveTypes.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name}
                   </option>
                 ))}
               </select>
+
+              {/* Date Range Selection & Presets */}
+              <select
+                className="filter-select preset-select"
+                value={datePreset}
+                onChange={(e) => handleDatePreset(e.target.value)}
+                title="Date range preset"
+              >
+                <option value="all">🗓️ All Dates</option>
+                <option value="this_month">This Month</option>
+                <option value="next_month">Next Month</option>
+                <option value="next_30">Next 30 Days</option>
+                <option value="past_30">Past 30 Days</option>
+                <option value="this_year">This Year ({new Date().getFullYear()})</option>
+                <option value="custom">Custom Range</option>
+              </select>
+
+              <div className="date-picker-inputs">
+                <label className="date-input-label">
+                  <span>From:</span>
+                  <input
+                    type="date"
+                    className="filter-date-input"
+                    value={startDateFilter}
+                    onChange={(e) => {
+                      setStartDateFilter(e.target.value);
+                      setDatePreset("custom");
+                    }}
+                  />
+                </label>
+                <label className="date-input-label">
+                  <span>To:</span>
+                  <input
+                    type="date"
+                    className="filter-date-input"
+                    value={endDateFilter}
+                    onChange={(e) => {
+                      setEndDateFilter(e.target.value);
+                      setDatePreset("custom");
+                    }}
+                  />
+                </label>
+              </div>
+
+              {(statusFilter || typeFilter || startDateFilter || endDateFilter) && (
+                <button
+                  type="button"
+                  className="filter-clear-btn"
+                  onClick={handleClearFilters}
+                  title="Reset all filters"
+                >
+                  ✕ Reset
+                </button>
+              )}
             </div>
 
             <div className="results-count">
@@ -292,13 +440,52 @@ export default function LeaveManagement() {
         ) : activeTab === "calendar" ? (
           /* Calendar Schedule View */
           <div className="leave-calendar-card">
-            <div className="calendar-header">
-              <h4>Approved Leaves Schedule</h4>
-              <span className="field-hint">Upcoming and active absences</span>
+            <div className="calendar-header-toolbar">
+              <div className="calendar-header-info">
+                <h4>Approved Leaves Schedule</h4>
+                <span className="field-hint">Confirmed team leaves and absences</span>
+              </div>
+              <div className="calendar-period-nav">
+                <button
+                  type="button"
+                  className="calendar-nav-btn"
+                  onClick={() => {
+                    const prev = new Date(calendarDate);
+                    prev.setMonth(prev.getMonth() - 1);
+                    setCalendarDate(prev);
+                  }}
+                  title="Previous month"
+                >
+                  ◀
+                </button>
+                <span className="calendar-period-label">
+                  {calendarDate.toLocaleString("default", { month: "long", year: "numeric" })}
+                </span>
+                <button
+                  type="button"
+                  className="calendar-nav-btn"
+                  onClick={() => {
+                    const next = new Date(calendarDate);
+                    next.setMonth(next.getMonth() + 1);
+                    setCalendarDate(next);
+                  }}
+                  title="Next month"
+                >
+                  ▶
+                </button>
+                <button
+                  type="button"
+                  className="calendar-today-btn"
+                  onClick={() => setCalendarDate(new Date())}
+                >
+                  Current Month
+                </button>
+              </div>
             </div>
+
             {calendarLeaves.length === 0 ? (
               <div className="empty-state p-8">
-                <p>No approved leaves scheduled in this period.</p>
+                <p>No approved leaves scheduled in {calendarDate.toLocaleString("default", { month: "long", year: "numeric" })}.</p>
               </div>
             ) : (
               <div className="calendar-list">
@@ -326,7 +513,7 @@ export default function LeaveManagement() {
                 <tr>
                   {activeTab !== "my" && <th>Employee</th>}
                   <th>Category</th>
-                  <th>Dates & Duration</th>
+                  <th>Dates &amp; Duration</th>
                   <th>Status</th>
                   <th>Submitted</th>
                   <th>Actions</th>
@@ -339,7 +526,7 @@ export default function LeaveManagement() {
                       colSpan={activeTab !== "my" ? 6 : 5}
                       className="text-center p-8 text-gray-500"
                     >
-                      No leave requests found matching this view.
+                      No leave requests found matching this view and date range.
                     </td>
                   </tr>
                 ) : (
@@ -429,7 +616,7 @@ export default function LeaveManagement() {
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
         onSuccess={refreshAll}
-        leaveTypes={leaveTypes}
+        leaveTypes={uniqueLeaveTypes}
       />
 
       <LeaveDetailModal

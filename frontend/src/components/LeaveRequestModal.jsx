@@ -178,6 +178,72 @@ export default function LeaveRequestModal({
               )}
             </div>
 
+            <div className="form-group full-width">
+              <div className="quick-date-chips" style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginBottom: "4px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "600", color: "#64748b" }}>Quick Range:</span>
+                <button
+                  type="button"
+                  className="chip-btn"
+                  style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "12px", padding: "2px 8px", fontSize: "11px", cursor: "pointer", color: "#334155" }}
+                  onClick={() => {
+                    const todayStr = new Date().toISOString().slice(0, 10);
+                    setFormData((prev) => ({ ...prev, start_date: todayStr, end_date: todayStr }));
+                  }}
+                >
+                  Today Only (1d)
+                </button>
+                <button
+                  type="button"
+                  className="chip-btn"
+                  style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "12px", padding: "2px 8px", fontSize: "11px", cursor: "pointer", color: "#334155" }}
+                  onClick={() => {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+                    setFormData((prev) => ({ ...prev, start_date: tomorrowStr, end_date: tomorrowStr }));
+                  }}
+                >
+                  Tomorrow (1d)
+                </button>
+                <button
+                  type="button"
+                  className="chip-btn"
+                  style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "12px", padding: "2px 8px", fontSize: "11px", cursor: "pointer", color: "#334155" }}
+                  onClick={() => {
+                    const start = new Date();
+                    start.setDate(start.getDate() + 1);
+                    const end = new Date(start);
+                    end.setDate(end.getDate() + 2);
+                    setFormData((prev) => ({
+                      ...prev,
+                      start_date: start.toISOString().slice(0, 10),
+                      end_date: end.toISOString().slice(0, 10),
+                    }));
+                  }}
+                >
+                  3 Days
+                </button>
+                <button
+                  type="button"
+                  className="chip-btn"
+                  style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "12px", padding: "2px 8px", fontSize: "11px", cursor: "pointer", color: "#334155" }}
+                  onClick={() => {
+                    const start = new Date();
+                    start.setDate(start.getDate() + 1);
+                    const end = new Date(start);
+                    end.setDate(end.getDate() + 4);
+                    setFormData((prev) => ({
+                      ...prev,
+                      start_date: start.toISOString().slice(0, 10),
+                      end_date: end.toISOString().slice(0, 10),
+                    }));
+                  }}
+                >
+                  1 Week (5d)
+                </button>
+              </div>
+            </div>
+
             <div className="form-group">
               <label htmlFor="startDateInput">
                 Start Date <span className="req">*</span>
@@ -187,6 +253,7 @@ export default function LeaveRequestModal({
                 id="startDateInput"
                 name="start_date"
                 value={formData.start_date}
+                min={new Date().toISOString().slice(0, 10)}
                 onChange={handleChange}
                 disabled={isSubmitting}
                 required
@@ -202,6 +269,7 @@ export default function LeaveRequestModal({
                 id="endDateInput"
                 name="end_date"
                 value={formData.end_date}
+                min={formData.start_date || new Date().toISOString().slice(0, 10)}
                 onChange={handleChange}
                 disabled={isSubmitting}
                 required
