@@ -62,9 +62,9 @@ export function AuthProvider({ children }) {
         is_employee: true,
       });
 
-      return { success: true, user: data.user };
-    } catch (_err) {
-      const msg = "Unable to connect to authentication server.";
+    } catch (err) {
+      console.error("Login request failed:", err);
+      const msg = "Unable to connect to authentication server. Please check if backend is waking up or verify CORS.";
       setAuthError(msg);
       return { success: false, error: msg };
     }

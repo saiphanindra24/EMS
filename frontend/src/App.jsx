@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import "./components/Auth.css";
 import { useAuth } from "./context/AuthContext";
+import { API_BASE_URL } from "./services/apiClient";
 import LoginPage from "./components/LoginPage";
 import Dashboard from "./components/Dashboard";
 import EmployeeDirectory from "./components/EmployeeDirectory";
@@ -53,8 +54,6 @@ function AppShell() {
   const [activePage, setActivePage] = useState("Dashboard");
   const [backendConnected, setBackendConnected] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/health/`, { credentials: "include" })
