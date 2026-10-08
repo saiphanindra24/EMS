@@ -198,6 +198,9 @@ class Command(BaseCommand):
                     user.role = item["role"]
                     user.first_name = item["first_name"]
                     user.last_name = item["last_name"]
+                    if item["role"] == Role.SUPER_ADMIN:
+                        user.is_staff = True
+                        user.is_superuser = True
                     user.save()
 
                 dept = dept_map.get(item["dept_code"])
