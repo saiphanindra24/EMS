@@ -13,6 +13,24 @@ logger = logging.getLogger("django.request")
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @throttle_classes([])
+def api_root(request):
+    """
+    EMWTS Root API Welcome Endpoint.
+    """
+    return Response({
+        "service": "EMWTS Backend API",
+        "status": "online",
+        "version": "1.0.0",
+        "health": "/healthz/",
+        "admin": "/admin/",
+        "auth": "/api/v1/auth/login/",
+        "message": "EMWTS Employee Management & Work Tracking API is live.",
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@throttle_classes([])
 def health_check(request):
     """
     EMWTS System & Database Health Check Endpoint.
