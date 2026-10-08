@@ -2,33 +2,60 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [main, rebuild/react-django]
   pull_request:
-    branches: [main]
+    branches: [main, rebuild/react-django]
 
 jobs:
-  validate:
-    name: Lint, Typecheck & Build
+  backend-tests:
+    name: Django Backend Tests
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 22
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Backend Tests
+        env:
+          DJANGO_DEBUG: "True"
+          DJANGO_SECRET_KEY: "ci-test-key-only-not-for-production-use"
+        run: |
+          cd backend
+          python manage.py test api accounts employees attendance tasks leave_management notifications reports organization
+
+  frontend-build:
+    name: React Frontend Tests & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
 
-      - name: Install Dependencies
-        run: npm ci
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Run Frontend Tests
+        run: |
+          cd frontend
+          npm test -- --run
 
-      - name: Build Next.js Application
-        env:
-          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
-          JWT_SECRET: dummy-jwt-secret-for-build-checks-only-12345678
-        run: npm run build
+      - name: Build Frontend Production Bundle
+        run: |
+          cd frontend
+          npm run build
