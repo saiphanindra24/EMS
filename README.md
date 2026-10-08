@@ -1,10 +1,12 @@
-# VolkssKatt — Employee Management & Training System
+# EMWTS — Employee Management & Work Tracking System
 
-## Which project am I setting up?
-
-**This repository uses Next.js 16, React 19, TypeScript, Tailwind CSS, Drizzle ORM, and PostgreSQL.** Next.js serves both the React interface and the REST endpoints in one application. Authentication uses JWT cookies and bcrypt password hashes.
-
-Although the original brief discussed Django/DRF and Vite, **this implementation is not a Django or Vite project**. There is no `manage.py`, Python virtual environment, or separate frontend/backend server to start. Do not create another project with `create-next-app` or `npm create vite`.
+> [!IMPORTANT]
+> **Production Rebuild Branch (`rebuild/react-django`):**
+> This repository contains the complete, enterprise-grade **React 19 + Django 6.1 REST Framework + PostgreSQL (Neon)** architecture.
+> - **Local Development**: See [DEVELOPMENT.md](DEVELOPMENT.md) for instructions to run the React frontend and Django backend locally.
+> - **Production Deployment Guide**: See [docs/PRODUCTION_DEPLOYMENT_GUIDE.md](docs/PRODUCTION_DEPLOYMENT_GUIDE.md) for deploying to **Vercel** (Frontend), **Render/Railway** (Backend), and **Neon** (PostgreSQL).
+> - **Operational Readiness & Security Review**: See [docs/PRODUCTION_OPERATIONAL_READINESS.md](docs/PRODUCTION_OPERATIONAL_READINESS.md).
+> - **Disaster Recovery & Backup Runbook**: See [docs/BACKUP_RESTORE_RUNBOOK.md](docs/BACKUP_RESTORE_RUNBOOK.md).
 
 These instructions set up a **local development/demo environment**, not a production deployment.
 

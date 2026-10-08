@@ -1,18 +1,41 @@
 # Dependencies and generated output
 node_modules/
+frontend/node_modules/
 .next/
 out/
 coverage/
 *.tsbuildinfo
 next-env.d.ts
+frontend/dist/
+
+# Python Virtual Environments & Cache
+venv/
+.venv/
+backend/venv/
+backend/.venv/
+__pycache__/
+*.py[cod]
 
 # Local credentials and environment backups
 .env
 .env.*
 !.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
 
-# Employee documents and other runtime uploads must not go to Git
+# Runtime uploads, media, and local databases
 public/uploads/
+backend/media/
+backend/staticfiles/
+backend/db.sqlite3
+*.sqlite3
+backups/
+*.dump
+*.sql
 
 # Logs and OS metadata
 *.log
