@@ -102,11 +102,21 @@ export default function Reports() {
     }
   };
 
-  // Trigger load when tab changes or page size changes
-  useEffect(() => {
+  // Tab change handler that clears tab-specific status filters
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setStatusFilter("");
+    setPriorityFilter("");
     setPage(1);
-    fetchReport(1);
-  }, [activeTab, pageSize]);
+  };
+
+  // Trigger load when tab, period (if not custom), or page size changes
+  useEffect(() => {
+    if (period !== "custom") {
+      setPage(1);
+      fetchReport(1);
+    }
+  }, [activeTab, period, pageSize]);
 
   // Handle Export
   const handleExport = async (format) => {
@@ -208,7 +218,7 @@ export default function Reports() {
           <button
             key={tab.id}
             className={`report-tab-btn ${activeTab === tab.id ? "active" : ""}`}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             id={`report-tab-${tab.id}`}
           >
             <span className="tab-icon">{tab.icon}</span>

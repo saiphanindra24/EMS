@@ -280,6 +280,11 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 ]
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
+CORS_EXPOSE_HEADERS = [
+    "Content-Disposition",
+    "Content-Type",
+    "Content-Length",
+]
 
 # Django REST Framework Configuration & Throttling
 IS_TESTING = "test" in sys.argv
