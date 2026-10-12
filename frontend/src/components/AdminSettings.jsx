@@ -19,8 +19,26 @@ const TIMEZONE_OPTIONS = [
   "Australia/Sydney",
 ];
 
+function EyeIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  );
+}
+
 export default function AdminSettings() {
-  const { user } = useAuth();
+  const { user, toggleMFA } = useAuth();
   const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "HR_ADMIN";
 
   const [activeTab, setActiveTab] = useState(isAdmin ? "general" : "profile");
@@ -89,6 +107,14 @@ export default function AdminSettings() {
     role: user?.role || "",
   });
   const [passwords, setPasswords] = useState({ current_password: "", new_password: "", confirm_password: "" });
+  const [showCurPassword, setShowCurPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // ── 9. Multi-Factor Authentication State ──
+  const [mfaEnabled, setMfaEnabled] = useState(Boolean(user?.mfa_enabled));
+  const [mfaSecret, setMfaSecret] = useState(null);
+  const [copiedSecret, setCopiedSecret] = useState(false);
 
   const showFeedback = (type, message) => {
     setFeedback({ type, message });
@@ -128,7 +154,12 @@ export default function AdminSettings() {
     }
 
     organizationService.getProfile()
-      .then((data) => setProfileData(data))
+      .then((data) => {
+        setProfileData(data);
+        if (data.mfa_enabled !== undefined) {
+          setMfaEnabled(Boolean(data.mfa_enabled));
+        }
+      })
       .catch(() => {});
   }, [isAdmin]);
 
@@ -302,6 +333,43 @@ export default function AdminSettings() {
       showFeedback("error", Array.isArray(err.detail) ? err.detail.join(" ") : err.detail || "Password change failed.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // ── Handlers: Multi-Factor Authentication (2FA) ──
+  const handleToggleMFA = async () => {
+    setIsLoading(true);
+    const targetState = !mfaEnabled;
+    try {
+      const res = await toggleMFA(targetState);
+      if (res.status === "success" || res.mfa_enabled !== undefined) {
+        setMfaEnabled(Boolean(res.mfa_enabled));
+        if (res.mfa_secret) {
+          setMfaSecret(res.mfa_secret);
+        } else {
+          setMfaSecret(null);
+        }
+        showFeedback("success", res.message || (targetState ? "Two-factor authentication enabled." : "Two-factor authentication disabled."));
+      } else {
+        showFeedback("error", res.error || "Failed to update 2FA configuration.");
+      }
+    } catch {
+      showFeedback("error", "Network error toggling multi-factor authentication.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCopySecret = async () => {
+    if (!mfaSecret) return;
+    try {
+      await navigator.clipboard.writeText(mfaSecret);
+      setCopiedSecret(true);
+      setTimeout(() => setCopiedSecret(false), 3000);
+    } catch {
+      // Fallback
+      setCopiedSecret(true);
+      setTimeout(() => setCopiedSecret(false), 3000);
     }
   };
 
@@ -961,35 +1029,118 @@ export default function AdminSettings() {
 
             <hr style={{ border: "none", borderTop: "1px solid #f1f5f9", margin: "10px 0" }} />
 
+            {/* TWO-FACTOR AUTHENTICATION (MFA / 2FA) */}
+            <div className="security-mfa-card">
+              <div className="mfa-header-row">
+                <div className="mfa-header-info">
+                  <span style={{ fontSize: "22px" }}>🔐</span>
+                  <div>
+                    <h4>Multi-Factor Authentication (2FA)</h4>
+                    <span className={`mfa-badge-pill ${mfaEnabled ? "enabled" : "disabled"}`}>
+                      {mfaEnabled ? "Enabled (Enforced on Login)" : "Disabled (Standard Security)"}
+                    </span>
+                  </div>
+                </div>
+                <div className="mfa-actions-row">
+                  <button
+                    type="button"
+                    className={mfaEnabled ? "btn-mfa-disable" : "btn-mfa-enable"}
+                    onClick={handleToggleMFA}
+                    disabled={isLoading}
+                  >
+                    {mfaEnabled ? "Disable Two-Factor Authentication" : "Enable Two-Factor Authentication"}
+                  </button>
+                </div>
+              </div>
+              <p className="mfa-description">
+                Protect your enterprise account with a secondary verification layer. When enabled, signing in requires both your password and a 6-digit one-time code (from an authenticator app like Google Authenticator / Authy or your registered corporate email).
+              </p>
+              {mfaEnabled && mfaSecret && (
+                <div className="mfa-secret-panel">
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "#334155" }}>
+                    Your Authenticator Setup Key (TOTP RFC 6238):
+                  </div>
+                  <div className="mfa-secret-code-wrapper">
+                    <span className="mfa-secret-code">{mfaSecret}</span>
+                    <button
+                      type="button"
+                      className="btn-copy-code"
+                      onClick={handleCopySecret}
+                    >
+                      {copiedSecret ? "Copied!" : "Copy Key"}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: "11.5px", color: "#64748b" }}>
+                    Add this key as a manual entry in Google Authenticator, Microsoft Authenticator, 1Password, or Apple Keychain to generate real-time 30-second codes.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <hr style={{ border: "none", borderTop: "1px solid #f1f5f9", margin: "10px 0" }} />
+
             <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <h3 style={{ margin: "0", fontSize: "15px", color: "#1e293b" }}>Change Account Password</h3>
               <div className="form-grid-2">
                 <div className="form-group-block">
                   <label>Current Password</label>
-                  <input
-                    type="password"
-                    value={passwords.current_password}
-                    onChange={(e) => setPasswords({ ...passwords, current_password: e.target.value })}
-                    required
-                  />
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showCurPassword ? "text" : "password"}
+                      value={passwords.current_password}
+                      onChange={(e) => setPasswords({ ...passwords, current_password: e.target.value })}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-inline"
+                      onClick={() => setShowCurPassword(!showCurPassword)}
+                      aria-label={showCurPassword ? "Hide password" : "Show password"}
+                      title={showCurPassword ? "Hide password" : "Show password"}
+                    >
+                      {showCurPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
                 </div>
                 <div className="form-group-block">
                   <label>New Password</label>
-                  <input
-                    type="password"
-                    value={passwords.new_password}
-                    onChange={(e) => setPasswords({ ...passwords, new_password: e.target.value })}
-                    required
-                  />
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      value={passwords.new_password}
+                      onChange={(e) => setPasswords({ ...passwords, new_password: e.target.value })}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-inline"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
+                      title={showNewPassword ? "Hide password" : "Show password"}
+                    >
+                      {showNewPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
                 </div>
                 <div className="form-group-block">
                   <label>Confirm New Password</label>
-                  <input
-                    type="password"
-                    value={passwords.confirm_password}
-                    onChange={(e) => setPasswords({ ...passwords, confirm_password: e.target.value })}
-                    required
-                  />
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={passwords.confirm_password}
+                      onChange={(e) => setPasswords({ ...passwords, confirm_password: e.target.value })}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-inline"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      title={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
                 </div>
               </div>
               <button type="submit" className="btn-save" disabled={isLoading}>

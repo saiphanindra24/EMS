@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.core import signing
+from django.core.mail import send_mail
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,8 +9,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from .permissions import IsOwnerOrManagerOrAdmin
 from .serializers import (
+    ForgotPasswordSerializer,
     LoginSerializer,
     LogoutSerializer,
+    MFAToggleSerializer,
+    MFAVerifySerializer,
+    RegisterSerializer,
+    ResetPasswordSerializer,
     TokenRefreshSerializer,
     UserSerializer,
 )
@@ -38,7 +45,7 @@ def clear_auth_cookies(response):
 class LoginView(APIView):
     """
     POST /api/v1/auth/login/
-    Authenticates user via email and password, returning JWT and user profile.
+    Authenticates user via email and password, returning JWT or requiring MFA challenge.
     """
     permission_classes = [permissions.AllowAny]
     throttle_scope = "auth"
@@ -47,8 +54,31 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        user = data["user"]
 
-        user_data = UserSerializer(data["user"]).data
+        # Check if Multi-Factor Authentication is enabled on this account
+        if user.mfa_enabled:
+            otp = user.generate_mfa_otp()
+            try:
+                send_mail(
+                    subject="EMWTS Security Code - Two-Factor Authentication",
+                    message=f"Hello {user.first_name or 'Team Member'},\n\nYour 6-digit verification code is:\n\n{otp}\n\nThis security code expires in 10 minutes. If you did not attempt to sign in, please secure your account immediately.\n\n— EMWTS Security Team",
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@emwts.local"),
+                    recipient_list=[user.email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+            temp_token = signing.dumps({"user_id": user.id, "purpose": "mfa"}, salt="emwts_mfa")
+            return Response({
+                "status": "mfa_required",
+                "message": "Two-factor authentication code required.",
+                "email_masked": user.masked_email,
+                "temp_token": temp_token,
+            }, status=status.HTTP_200_OK)
+
+        user_data = UserSerializer(user).data
         response_data = {
             "status": "success",
             "message": "Login successful",
@@ -59,6 +89,181 @@ class LoginView(APIView):
         response = Response(response_data, status=status.HTTP_200_OK)
         set_auth_cookies(response, data["access"], data["refresh"])
         return response
+
+
+class MFAVerifyView(APIView):
+    """
+    POST /api/v1/auth/mfa/verify/
+    Verifies 6-digit TOTP or email OTP to complete two-factor authentication.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        serializer = MFAVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        temp_token = serializer.validated_data["temp_token"]
+        code = serializer.validated_data["code"]
+
+        try:
+            payload = signing.loads(temp_token, salt="emwts_mfa", max_age=600)
+            if payload.get("purpose") != "mfa":
+                raise ValueError("Invalid purpose")
+            user = User.objects.get(id=payload["user_id"], is_active=True)
+        except Exception:
+            return Response(
+                {"detail": "MFA session has expired or is invalid. Please sign in again."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not (user.verify_totp(code) or user.verify_mfa_otp(code)):
+            return Response(
+                {"code": ["Invalid or expired 6-digit security code."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        refresh = RefreshToken.for_user(user)
+        refresh["role"] = user.role
+        refresh["email"] = user.email
+        refresh["full_name"] = user.full_name
+        access = str(refresh.access_token)
+
+        user_data = UserSerializer(user).data
+        response = Response({
+            "status": "success",
+            "message": "Two-factor verification successful",
+            "user": user_data,
+            "access": access,
+            "refresh": str(refresh),
+        }, status=status.HTTP_200_OK)
+        set_auth_cookies(response, access, str(refresh))
+        return response
+
+
+class MFAToggleView(APIView):
+    """
+    POST /api/v1/auth/mfa/toggle/
+    Enables or disables Multi-Factor Authentication for the authenticated user.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = MFAToggleSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        enable = serializer.validated_data["enable"]
+        user = request.user
+
+        if enable:
+            secret = user.mfa_secret or user.generate_mfa_secret()
+            user.mfa_enabled = True
+            user.save(update_fields=["mfa_enabled", "mfa_secret"])
+            otpauth_url = f"otpauth://totp/EMWTS:{user.email}?secret={secret}&issuer=EMWTS"
+            return Response({
+                "status": "success",
+                "mfa_enabled": True,
+                "mfa_secret": secret,
+                "otpauth_url": otpauth_url,
+                "message": "Two-factor authentication enabled successfully.",
+            }, status=status.HTTP_200_OK)
+        else:
+            user.mfa_enabled = False
+            user.save(update_fields=["mfa_enabled"])
+            return Response({
+                "status": "success",
+                "mfa_enabled": False,
+                "message": "Two-factor authentication has been disabled.",
+            }, status=status.HTTP_200_OK)
+
+
+class RegisterView(APIView):
+    """
+    POST /api/v1/auth/register/
+    Self-service employee registration. Creates user account and employee profile.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        refresh = RefreshToken.for_user(user)
+        refresh["role"] = user.role
+        refresh["email"] = user.email
+        refresh["full_name"] = user.full_name
+        access = str(refresh.access_token)
+
+        user_data = UserSerializer(user).data
+        response = Response({
+            "status": "success",
+            "message": f"Welcome to EMWTS, {user.first_name}! Your account has been registered.",
+            "user": user_data,
+            "access": access,
+            "refresh": str(refresh),
+        }, status=status.HTTP_201_CREATED)
+        set_auth_cookies(response, access, str(refresh))
+        return response
+
+
+class ForgotPasswordView(APIView):
+    """
+    POST /api/v1/auth/forgot-password/
+    Sends a 6-digit password reset verification code to user's registered email.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
+            code = user.generate_password_reset_code()
+            try:
+                send_mail(
+                    subject="EMWTS Password Reset Verification Code",
+                    message=f"Hello {user.first_name or 'User'},\n\nYour 6-digit password reset code is:\n\n{code}\n\nThis verification code expires in 15 minutes. If you did not request this change, please ignore this email.\n\n— EMWTS Security Team",
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@emwts.local"),
+                    recipient_list=[user.email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+        return Response({
+            "status": "success",
+            "message": "If an account exists with this email address, a 6-digit verification code has been dispatched.",
+            "email_masked": user.masked_email if user else email,
+        }, status=status.HTTP_200_OK)
+
+
+class ResetPasswordView(APIView):
+    """
+    POST /api/v1/auth/reset-password/
+    Verifies 6-digit code and sets new password for user account.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        new_password = serializer.validated_data["new_password"]
+
+        user.set_password(new_password)
+        user.password_reset_code = ""
+        user.password_reset_expires_at = None
+        user.save(update_fields=["password", "password_reset_code", "password_reset_expires_at"])
+
+        return Response({
+            "status": "success",
+            "message": "Your password has been successfully reset. You may now sign in.",
+        }, status=status.HTTP_200_OK)
 
 
 class CustomTokenRefreshView(APIView):
