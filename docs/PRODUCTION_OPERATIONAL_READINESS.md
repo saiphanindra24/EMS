@@ -100,6 +100,18 @@ This document summarizes the security audit, hardening measures, vulnerability a
   - `CREATE_EMPLOYEE`, `UPDATE_EMPLOYEE`, `DELETE_EMPLOYEE`, `DEACTIVATE_EMPLOYEE`, `REACTIVATE_EMPLOYEE`
 - Retained in PostgreSQL and accessible exclusively to `SUPER_ADMIN` and `HR_ADMIN`.
 
+### 3.3 Real-Time WebSockets & ASGI Protocol Architecture
+- **ASGI Server**: Daphne 4.2+ running `config.asgi.application` via `ProtocolTypeRouter`.
+- **WebSocket Endpoints**: `/ws/chat/<room_name>/` routed to `ChatConsumer`.
+- **Channel Layer Backend**:
+  - Standalone / Single Instance: `channels.layers.InMemoryChannelLayer` (zero external dependencies).
+  - Multi-pod Horizontal Autoscaling: `channels_redis.core.RedisChannelLayer` (auto-enabled via `REDIS_URL`).
+- **Signaling & Messaging Capabilities**:
+  - Canonical Direct Messaging (`dm_<slug1>_<slug2>` sorted deterministically).
+  - Workplace-wide real-time user notification channel (`chat_user_<slug>`).
+  - WebRTC signaling for peer-to-peer Voice & Video calls and Screen Sharing.
+  - Persistent chat history in PostgreSQL (`chat.models.Message`) exposed via `/api/v1/chat/history/<room>/`.
+
 ---
 
 ## 4. Operational Readiness Checklist
@@ -116,21 +128,33 @@ This document summarizes the security audit, hardening measures, vulnerability a
 | **Infrastructure**| PostgreSQL 17 migrations up-to-date (0 pending) | Passed |
 | **Infrastructure**| Connection pooling `CONN_MAX_AGE=60` enabled | Passed |
 | **Infrastructure**| Health checks routed at `/healthz/` and `/api/health/` | Passed |
+| **Infrastructure**| Daphne ASGI server & Django Channels configured | Passed |
 | **Reliability** | Database backup and restore runbooks & scripts ready | Passed |
-| **Frontend** | React 19 production build compiled (`dist/` 483kB bundle) | Passed |
-| **Frontend** | Client tests pass (24/24 Vitest tests green) | Passed |
+| **Workplace** | Live Workplace Calendar with scheduled sync | Passed |
+| **Workplace** | Meet & Chat real-time WebRTC & messaging suite | Passed |
+| **Frontend** | Client test suite passes (33/33 Vitest tests green) | Passed |
 | **Quality** | Complete Django backend tests pass (100/100 tests green) | Passed |
 
 ---
 
 ## 5. Remaining Risks & Architectural Decisions
 
-1. **SMTP Provider Provisioning**:
+1. **ASGI Application Server in Production**:
+   - *Current State*: Configured with `config.asgi.application` and Daphne.
+   - *Action for Ops*: In production container deployment (Render / Kubernetes / Docker), ensure the service start command runs Daphne:
+     ```bash
+     daphne -b 0.0.0.0 -p $PORT config.asgi:application
+     ```
+     This ensures both HTTP REST endpoints and `/ws/chat/` WebSocket connections are served simultaneously.
+2. **Channel Layers for Multi-Instance Scaling**:
+   - *Current State*: Defaults to `InMemoryChannelLayer` when `REDIS_URL` is omitted.
+   - *Recommendation*: When scaling beyond 1 container replica, attach a Redis instance (e.g. Upstash, AWS ElastiCache, or Render Redis) and provide `REDIS_URL=redis://...`.
+3. **SMTP Provider Provisioning**:
    - *Current State*: Configured with `django.core.mail.backends.smtp.EmailBackend` via `MAILERS`, defaulting to `console.EmailBackend` when `DEBUG=True`.
    - *Action for Ops*: Provide valid production credentials (`EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`) in the production environment secret manager (e.g., AWS Secrets Manager, Vault, or Kubernetes Secret).
-2. **Media Storage in Distributed Deployments**:
+4. **Media Storage in Distributed Deployments**:
    - *Current State*: Local filesystem (`MEDIA_ROOT = BASE_DIR / 'media'`).
-   - *Recommendation*: If running multi-pod or multi-server autoscaling Django deployments, adopt S3/GCS (`django-storages`) to share employee profile photos and attachments across instances.
-3. **Database SSL Certificate Validation**:
+   - *Recommendation*: If running multi-pod autoscaling Django deployments, adopt S3/GCS (`django-storages`) to share employee profile photos and attachments across instances.
+5. **Database SSL Certificate Validation**:
    - *Current State*: `DB_SSLMODE` supported (`require`).
    - *Recommendation*: In enterprise managed PostgreSQL (e.g. AWS RDS), ensure the root CA certificate is mounted to enable `verify-full`.

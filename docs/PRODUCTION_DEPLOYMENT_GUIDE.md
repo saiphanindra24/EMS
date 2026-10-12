@@ -63,7 +63,7 @@ $env:DATABASE_URL = "postgresql://neondb_owner:npg_xyz@ep-cool-fog-123456.us-eas
    - **Root Directory**: `backend`
    - **Runtime**: `Python 3`
    - **Build Command**: `bash build.sh`
-   - **Start Command**: `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --threads 2 --timeout 120`
+   - **Start Command**: `daphne -b 0.0.0.0 -p $PORT config.asgi:application`
 6. Add the following **Environment Variables**:
 
 | Variable | Value | Description |
@@ -76,9 +76,10 @@ $env:DATABASE_URL = "postgresql://neondb_owner:npg_xyz@ep-cool-fog-123456.us-eas
 | `CORS_ALLOWED_ORIGINS` | `https://your-app.vercel.app` *(update after Step 3)* | Allowed frontend domain |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | `https://your-app.vercel.app,https://emwts-backend.onrender.com` | CSRF trusted origins |
 | `PYTHON_VERSION` | `3.12.3` | Python runtime version |
+| `REDIS_URL` *(optional)* | `rediss://...` | Needed only for multi-instance Channel Layer clustering |
 
 7. Click **Create Web Service**.
-8. Render will install dependencies, collect static files, apply migrations to Neon, and start Gunicorn.
+8. Render will install dependencies, collect static files, apply migrations to Neon, and start the Daphne ASGI server.
 9. Verify health probe once live:
    `https://emwts-backend.onrender.com/healthz/`
    Response: `{"status": "healthy", "service": "EMWTS Backend API", ...}`

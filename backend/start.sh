@@ -10,5 +10,5 @@ python manage.py seed_employees || true
 python manage.py seed_leave_types || true
 python manage.py seed_tasks || true
 
-echo "[*] Launching Gunicorn application server..."
-exec gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --threads 2 --timeout 120
+echo "[*] Launching Daphne ASGI application server..."
+exec daphne -b 0.0.0.0 -p $PORT config.asgi:application

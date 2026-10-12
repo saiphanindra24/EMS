@@ -5,9 +5,12 @@ import { employeeService } from "../services/employeeService";
 import { leaveService } from "../services/leaveService";
 import { formatApiError } from "../services/apiClient";
 import { useAuth } from "../context/AuthContext";
+import { INITIAL_CONTACTS } from "./MeetChat";
+import { getUserSlug } from "../services/chatSocket";
 
 export default function Dashboard({ onNavigate }) {
   const { user } = useAuth();
+  const mySlug = getUserSlug(user);
   const isManagerOrAdmin = user?.role === "SUPER_ADMIN" || user?.role === "HR_ADMIN" || user?.role === "MANAGER";
 
   const [isLoading, setIsLoading] = useState(true);
@@ -191,6 +194,146 @@ export default function Dashboard({ onNavigate }) {
             <div><span className="activity-marker gray-marker" /><span>To Do</span><strong>{pendingTasks}</strong></div>
           </div>
         </article>
+      </section>
+
+      {/* ── Workplace Communications & Collaboration Quick Hub ── */}
+      <section className="panel" style={{ padding: "20px 24px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>💬</span> Team Communications &amp; Live Collaboration
+            </h3>
+            <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#64748b" }}>
+              Instant standup meetings, team channels, and direct colleague chats
+            </p>
+          </div>
+          <button
+            className="small-select"
+            onClick={() => onNavigate && onNavigate("Meet & Chat")}
+            style={{ fontWeight: 600, cursor: "pointer" }}
+          >
+            Open Meet &amp; Chat →
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+          {/* Daily Standup Card */}
+          <div
+            style={{
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "10px",
+              padding: "16px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              gap: "12px",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <strong style={{ fontSize: "14px", color: "#0f172a" }}>#daily-scrum</strong>
+                <span style={{ fontSize: "11px", fontWeight: 700, background: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: "999px" }}>
+                  🟢 Active Standup
+                </span>
+              </div>
+              <p style={{ margin: "6px 0 0", fontSize: "12px", color: "#64748b" }}>
+                Daily Morning Scrum (09:30 AM) &amp; Evening Updates. Team status sync.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ flex: 1, padding: "7px 12px", fontSize: "12px", cursor: "pointer" }}
+                onClick={() => onNavigate && onNavigate("Meet & Chat")}
+              >
+                📹 Join Standup
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ padding: "7px 12px", fontSize: "12px", cursor: "pointer" }}
+                onClick={() => onNavigate && onNavigate("Meet & Chat")}
+              >
+                💬 Chat
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Colleague DMs */}
+          <div
+            style={{
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "10px",
+              padding: "16px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              gap: "8px",
+            }}
+          >
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              COLLABORATE WITH COLLEAGUES
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {INITIAL_CONTACTS.filter((c) => c.slug !== mySlug).slice(0, 3).map((contact) => (
+                <div
+                  key={contact.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "6px 10px",
+                    background: "#ffffff",
+                    borderRadius: "6px",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div
+                      style={{
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "50%",
+                        background: contact.avatarColor,
+                        color: "#ffffff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {contact.name.split(" ").map((n) => n[0]).join("")}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12.5px", fontWeight: 600, color: "#1e293b" }}>{contact.name}</div>
+                      <div style={{ fontSize: "11px", color: "#64748b" }}>{contact.role}</div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    style={{
+                      background: "#f1f5f9",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "4px 10px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: "#475569",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => onNavigate && onNavigate("Meet & Chat")}
+                  >
+                    💬 Message
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ── Recent Tasks from Real API ── */}
