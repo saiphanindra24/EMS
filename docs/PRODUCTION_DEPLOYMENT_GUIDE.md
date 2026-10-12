@@ -119,7 +119,7 @@ $env:DATABASE_URL = "postgresql://neondb_owner:npg_xyz@ep-cool-fog-123456.us-eas
 1. Open your Vercel URL: `https://emwts-frontend.vercel.app`.
 2. Login using the Super Admin credentials:
    - **Email**: `admin@emwts.local`
-   - **Password**: `AdminPass123!`
+   - **Password**: `AdminPass2026!`
 3. Verify:
    - [x] Dashboard loads with live employee counts and stats.
    - [x] Employees page loads directory from Neon database.
