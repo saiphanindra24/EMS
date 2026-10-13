@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     'chat',
     'payroll',
     'projects',
+    'expenses',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
