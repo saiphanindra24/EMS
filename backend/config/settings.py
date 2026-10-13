@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'reports',
     'organization',
     'chat',
+    'payroll',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -147,6 +148,15 @@ else:
     _ssl_mode = os.environ.get("DB_SSLMODE", "")
     if _ssl_mode:
         DATABASES["default"]["OPTIONS"]["sslmode"] = _ssl_mode
+
+import sys
+if "test" in sys.argv:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
+    }
 
 
 # Password validation

@@ -88,6 +88,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         full = f"{self.first_name} {self.last_name}".strip()
         return full or self.email
 
+    def get_full_name(self):
+        return self.full_name
+
     @property
     def masked_email(self):
         if "@" not in self.email:

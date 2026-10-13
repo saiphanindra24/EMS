@@ -179,3 +179,5 @@ export async function apiClient(endpoint, options = {}) {
 
   return response;
 }
+
+export default axiosInstance;
