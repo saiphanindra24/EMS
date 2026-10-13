@@ -165,7 +165,7 @@ export default function Reports() {
     <div className="reports-container">
       {/* ── Printable Formal Header (visible only on print) ── */}
       <div className="print-only-header">
-        <h1>EMWTS Workplace Management — Official Report</h1>
+        <h1>SSKATT EWTS — Official Workplace Report</h1>
         <p>
           <strong>Report:</strong> {REPORT_TABS.find((t) => t.id === activeTab)?.name} |{" "}
           <strong>Period:</strong> {reportingPeriod?.label || period} |{" "}

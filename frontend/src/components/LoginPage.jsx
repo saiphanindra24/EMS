@@ -163,7 +163,7 @@ export default function LoginPage() {
 
     setIsSubmitting(false);
     if (res.success) {
-      setSuccessNotice("Account created successfully! Welcome to EMWTS.");
+      setSuccessNotice("Account created successfully! Welcome to SSKATT EWTS.");
     }
   };
 
@@ -238,11 +238,13 @@ export default function LoginPage() {
         {/* Brand Header */}
         <div className="login-header">
           <div className="login-logo-wrapper">
-            <div className="login-logo">E</div>
-            <span className="live-status-pill">Enterprise 2026</span>
+            <div className="login-logo-container">
+              <img src="/logo.png" alt="SSKATT EWTS Logo" className="login-logo-img" />
+            </div>
+            <span className="live-status-pill">VolkssKatt Enterprise</span>
           </div>
-          <h1>EMWTS</h1>
-          <p>Employee Management &amp; Workplace Tracking Suite</p>
+          <h1>SSKATT EWTS</h1>
+          <p>VolkssKatt Employee Workplace Tracking Suite</p>
         </div>
 
         {/* Dynamic Mode Switch Tabs (Login / Register) */}

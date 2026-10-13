@@ -33,8 +33,10 @@ const ALL_NAV = [
 function LoadingScreen() {
   return (
     <div className="loading-screen" role="status" aria-live="polite">
-      <div className="loading-logo">E</div>
-      <p>Checking session…</p>
+      <div className="loading-logo-box">
+        <img src="/logo.png" alt="SSKATT EWTS Logo" className="loading-logo-img" />
+      </div>
+      <p>Synchronizing SSKATT EWTS…</p>
     </div>
   );
 }
@@ -255,10 +257,12 @@ function AppShell() {
       {/* ── Sidebar ── */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} aria-label="Main Navigation">
         <div className="brand">
-          <div className="brand-logo">E</div>
-          <div>
-            <h2>EMWTS</h2>
-            <span>Workplace Suite</span>
+          <div className="brand-logo-container">
+            <img src="/logo.png" alt="SSKATT EWTS Logo" className="brand-logo-img" />
+          </div>
+          <div className="brand-titles">
+            <h2>SSKATT EWTS</h2>
+            <span>VolkssKatt Suite</span>
           </div>
           <button
             type="button"
@@ -416,7 +420,7 @@ function AppShell() {
           )}
 
 
-          <footer className="footer">EMWTS © 2026 · Employee Management &amp; Work Tracking System</footer>
+          <footer className="footer">SSKATT EWTS © 2026 · VolkssKatt Infotech Private Limited</footer>
         </div>
       </main>
     </div>

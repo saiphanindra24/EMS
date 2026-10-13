@@ -51,31 +51,87 @@ a:focus-visible {
 .brand {
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 0 10px 35px;
+  gap: 12px;
+  padding: 0 8px 30px;
 }
 
-.brand-logo {
-  width: 40px;
-  height: 40px;
-  background: #345de5;
-  color: white;
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-  font-weight: 700;
-  border-radius: 11px;
+.brand-logo-container {
+  width: 44px;
+  height: 44px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
-.brand h2 {
-  font-size: 17px;
-  margin: 0 0 3px;
-  letter-spacing: 0.3px;
+.brand-logo-container:hover {
+  transform: scale(1.06);
 }
 
-.brand span {
-  color: #8a94a6;
+.brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brand-titles {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.brand-titles h2 {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 2px;
+  letter-spacing: -0.3px;
+  background: linear-gradient(115deg, #1d4ed8 0%, #7c3aed 55%, #c026d3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-titles span {
+  color: #64748b;
   font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.loading-logo-box {
+  width: 68px;
+  height: 68px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  margin: 0 auto 16px;
+  animation: pulse-logo 2s infinite ease-in-out;
+}
+
+.loading-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@keyframes pulse-logo {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 12px 30px rgba(124, 58, 237, 0.25);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 16px 36px rgba(192, 38, 211, 0.4);
+  }
 }
 
 .nav-label {
@@ -109,12 +165,14 @@ a:focus-visible {
 
 .nav-item:hover {
   background: #f3f5fa;
+  color: #1e293b;
 }
 
 .nav-item.active {
-  background: #edf1ff;
-  color: #345de5;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(124, 58, 237, 0.12) 100%);
+  color: #7c3aed;
   font-weight: 600;
+  border-left: 3px solid #c026d3;
 }
 
 .nav-icon {
@@ -915,3 +973,149 @@ tbody tr:last-child td {
     height: 88px;
   }
 }
+
+/* ── VolkssKatt / SSKATT EWTS Brand Hero Card on Dashboard ── */
+.brand-hero-card {
+  background: linear-gradient(115deg, #1e3a8a 0%, #2563eb 20%, #4f46e5 40%, #7c3aed 60%, #9333ea 74%, #c026d3 88%, #db2777 96%, #e11d48 100%);
+  border-radius: 18px;
+  padding: 30px 36px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  box-shadow: 0 16px 36px -10px rgba(124, 58, 237, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-hero-card::after {
+  content: "";
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.35) 0%, rgba(217, 70, 239, 0) 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.brand-hero-content {
+  flex: 1;
+  max-width: 620px;
+  z-index: 1;
+}
+
+.brand-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.hero-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+}
+
+.brand-hero-title {
+  font-size: 27px;
+  font-weight: 800;
+  line-height: 1.25;
+  margin: 0 0 10px;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+.brand-hero-desc {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 20px;
+}
+
+.brand-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hero-btn-primary {
+  background: #ffffff;
+  color: #1e1b4b;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.hero-btn-primary:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  background: #f8fafc;
+}
+
+.hero-btn-secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.hero-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.brand-hero-media {
+  max-width: 320px;
+  max-height: 180px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+  display: flex;
+}
+
+.brand-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 900px) {
+  .brand-hero-card {
+    flex-direction: column;
+    padding: 24px 20px;
+  }
+  .brand-hero-media {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+

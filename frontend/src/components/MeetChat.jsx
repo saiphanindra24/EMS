@@ -106,7 +106,7 @@ const INITIAL_MESSAGES = {
       id: "seed-10",
       sender: "Priya Sharma",
       initials: "PS",
-      text: "Welcome to the EMWTS Workplace Suite! New calendar features and video calling are now active.",
+      text: "Welcome to the SSKATT EWTS Workplace Suite! New calendar features and video calling are now active.",
       time: "Yesterday",
       reactions: ["🎉 5"],
     },

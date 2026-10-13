@@ -35,7 +35,7 @@ describe("Enterprise Authentication Suite", () => {
   it("renders clean production sign-in form with empty inputs and no hardcoded credentials", () => {
     render(<LoginPage />);
 
-    expect(screen.getByRole("heading", { name: "EMWTS" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "SSKATT EWTS" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Sign In$/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Create Account/i })).toBeInTheDocument();
 

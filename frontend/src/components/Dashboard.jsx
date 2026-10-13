@@ -124,6 +124,40 @@ export default function Dashboard({ onNavigate }) {
         </div>
       )}
 
+      {/* ── VolkssKatt / SSKATT EWTS Brand Hero Banner ── */}
+      <section className="brand-hero-card">
+        <div className="brand-hero-content">
+          <div className="brand-hero-pill">
+            <span className="hero-pill-dot" /> VolkssKatt Cloud 2026
+          </div>
+          <h2 className="brand-hero-title">
+            Transform Your Ideas Into Digital Reality
+          </h2>
+          <p className="brand-hero-desc">
+            Welcome to SSKATT EWTS — your enterprise workspace for synchronized attendance tracking, sprint deliverables execution, leave management, and live collaboration.
+          </p>
+          <div className="brand-hero-actions">
+            <button
+              type="button"
+              className="hero-btn-primary"
+              onClick={() => onNavigate && onNavigate("Attendance")}
+            >
+              Punch Attendance →
+            </button>
+            <button
+              type="button"
+              className="hero-btn-secondary"
+              onClick={() => onNavigate && onNavigate("Tasks")}
+            >
+              View Active Tasks
+            </button>
+          </div>
+        </div>
+        <div className="brand-hero-media">
+          <img src="/brand-hero.png" alt="VolkssKatt Digital Reality" className="brand-hero-img" />
+        </div>
+      </section>
+
       {/* ── 4 Top Stat KPI Cards ── */}
       <section className="stats-grid">
         {statsCards.map((stat) => (
