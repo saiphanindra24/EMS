@@ -37,8 +37,14 @@ export default function Dashboard({ onNavigate }) {
       if (attRes.status === "fulfilled") setAttendanceStats(attRes.value);
       if (tasksRes.status === "fulfilled") setRecentTasks(tasksRes.value?.results || []);
       if (taskStatsRes.status === "fulfilled") setTaskStats(taskStatsRes.value);
-      if (empRes.status === "fulfilled") setTotalHeadcount(empRes.value?.count || 0);
-      if (leaveRes.status === "fulfilled") setPendingLeavesCount(leaveRes.value?.count || 0);
+      if (empRes.status === "fulfilled") {
+        const d = empRes.value;
+        setTotalHeadcount(typeof d?.count === "number" ? d.count : (Array.isArray(d) ? d.length : (d?.results?.length || 0)));
+      }
+      if (leaveRes.status === "fulfilled") {
+        const d = leaveRes.value;
+        setPendingLeavesCount(typeof d?.count === "number" ? d.count : (Array.isArray(d) ? d.length : (d?.results?.length || 0)));
+      }
     } catch (err) {
       setErrorMessage(formatApiError(err));
     } finally {
@@ -58,12 +64,12 @@ export default function Dashboard({ onNavigate }) {
   const absentCount = attendanceStats?.absent || 0;
   const presentRate = totalEmployees > 0 ? Math.round(((presentCount + lateCount) / totalEmployees) * 100) : 0;
 
-  const totalTasks = taskStats?.total_tasks || 0;
-  const completedTasks = taskStats?.completed_tasks || 0;
-  const inProgressTasks = taskStats?.in_progress_tasks || 0;
-  const pendingTasks = taskStats?.todo_tasks || 0;
-  const overdueTasks = taskStats?.overdue_tasks || 0;
-  const completionRate = taskStats?.completion_rate || (totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0);
+  const totalTasks = taskStats?.total_tasks ?? taskStats?.total ?? 0;
+  const completedTasks = taskStats?.completed_tasks ?? taskStats?.completed ?? 0;
+  const inProgressTasks = taskStats?.in_progress_tasks ?? taskStats?.in_progress ?? 0;
+  const pendingTasks = taskStats?.todo_tasks ?? taskStats?.todo ?? 0;
+  const overdueTasks = taskStats?.overdue_tasks ?? taskStats?.overdue ?? 0;
+  const completionRate = taskStats?.completion_rate ?? (totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0);
 
   const statsCards = [
     {

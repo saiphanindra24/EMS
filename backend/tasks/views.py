@@ -242,12 +242,20 @@ class TaskStatsView(APIView):
         blocked = qs.filter(status=TaskStatus.BLOCKED).count()
         overdue = qs.filter(due_date__lt=today).exclude(status__in=[TaskStatus.COMPLETED, TaskStatus.CANCELLED]).count()
 
+        completion_rate = round((completed / total * 100), 1) if total > 0 else 0
+
         return Response({
             "total": total,
+            "total_tasks": total,
             "todo": todo,
+            "todo_tasks": todo,
             "in_progress": in_progress,
+            "in_progress_tasks": in_progress,
             "in_review": in_review,
             "completed": completed,
+            "completed_tasks": completed,
             "blocked": blocked,
             "overdue": overdue,
+            "overdue_tasks": overdue,
+            "completion_rate": completion_rate,
         }, status=status.HTTP_200_OK)
