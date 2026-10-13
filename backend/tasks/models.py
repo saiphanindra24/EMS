@@ -47,6 +47,13 @@ class Task(models.Model):
         blank=True,
         related_name="tasks",
     )
+    project = models.ForeignKey(
+        "projects.Project",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tasks",
+    )
     priority = models.CharField(
         max_length=20,
         choices=TaskPriority.choices,
