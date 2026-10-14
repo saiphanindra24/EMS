@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     'projects',
     'expenses',
     'performance',
+    'lifecycle',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

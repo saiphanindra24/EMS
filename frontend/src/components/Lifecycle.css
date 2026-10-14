@@ -1,0 +1,810 @@
+/* ==========================================================================
+   SSKATT EWTS — Training, Certifications & Exit Clearance Stylesheet
+   ========================================================================== */
+
+.life-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  animation: lifeFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lifeFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Header ─── */
+.life-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.life-header-titles h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-h, #0f172a);
+  margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.life-header-titles p {
+  margin: 0;
+  color: var(--text, #64748b);
+  font-size: 14px;
+}
+
+.life-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-primary-action.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.35);
+}
+
+.btn-primary-action.danger:hover {
+  box-shadow: 0 6px 20px 0 rgba(239, 68, 68, 0.5);
+}
+
+/* ─── Banners ─── */
+.life-toast-banner {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.life-error-banner {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* ─── KPI Cards ─── */
+.life-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.life-kpi-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.life-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.life-kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.life-kpi-icon.blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+.life-kpi-icon.purple { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
+.life-kpi-icon.emerald { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.life-kpi-icon.amber { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+
+.life-kpi-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.life-kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #94a3b8);
+}
+
+.life-kpi-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-h, #0f172a);
+  margin: 3px 0;
+}
+
+.life-kpi-sub {
+  font-size: 12px;
+  color: var(--text, #64748b);
+}
+
+.life-kpi-sub.highlight-purple { color: #8b5cf6; font-weight: 600; }
+.life-kpi-sub.highlight-emerald { color: #10b981; font-weight: 600; }
+
+/* ─── Controls & Tabs ─── */
+.life-controls-panel {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.life-tabs {
+  display: flex;
+  background: var(--card-bg, #ffffff);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.life-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #64748b);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.life-tab-btn:hover {
+  color: var(--text-h, #0f172a);
+}
+
+.life-tab-btn.active {
+  background: #6366f1;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+
+/* ─── TAB 1: Catalog Cards ─── */
+.life-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.life-course-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.life-course-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.life-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.life-format-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fmt-virtual { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+.fmt-self { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.fmt-onsite { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.fmt-blended { background: rgba(139, 92, 246, 0.12); color: #7c3aed; }
+
+.life-level-badge {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--border-color, #e2e8f0);
+  color: var(--text-muted, #64748b);
+}
+
+.life-course-code {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.life-course-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-h, #0f172a);
+  line-height: 1.35;
+}
+
+.life-instructor-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text, #64748b);
+}
+
+.life-skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.life-skill-pill {
+  background: var(--surface-bg, #f1f5f9);
+  color: var(--text, #475569);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.life-course-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text, #64748b);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.life-card-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color, #f1f5f9);
+}
+
+.life-enrolled-count {
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 600;
+}
+
+.btn-enroll-action {
+  background: #6366f1;
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-enroll-action:hover {
+  background: #4f46e5;
+}
+
+.life-enrolled-badge {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ─── TAB 2: Enrollments List ─── */
+.life-enrollments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.life-enroll-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 20px;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 768px) {
+  .life-enroll-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+.life-enroll-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.life-enroll-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.life-enroll-code {
+  font-weight: 700;
+  color: #6366f1;
+  font-size: 13px;
+}
+
+.life-enroll-status {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.st-enrolled { background: rgba(59, 130, 246, 0.15); color: #1d4ed8; }
+.st-in_progress { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.st-completed { background: rgba(16, 185, 129, 0.15); color: #047857; }
+
+.life-enroll-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text, #64748b);
+}
+
+.life-progress-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.life-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.life-progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-bg, #f1f5f9);
+  overflow: hidden;
+}
+
+.life-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #10b981);
+  transition: width 0.3s ease;
+}
+
+.life-stepper-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.life-feedback-box {
+  background: var(--surface-bg, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.life-feedback-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 700;
+}
+
+.life-star-row {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-star {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #cbd5e1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-star.filled {
+  color: #eab308;
+}
+
+.life-feedback-text {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text, #64748b);
+}
+
+/* ─── TAB 3: Certifications ─── */
+.life-certs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.life-cert-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.04);
+}
+
+.life-cert-seal {
+  font-size: 32px;
+}
+
+.life-cert-card h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-h, #0f172a);
+}
+
+.life-cert-issuer {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+.life-cert-dates {
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.life-cert-id {
+  font-size: 12px;
+  color: var(--text, #475569);
+}
+
+.btn-cert-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6366f1;
+  text-decoration: none;
+  margin-top: 4px;
+}
+
+.life-verified-tag {
+  margin-top: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #10b981;
+}
+
+/* ─── TAB 4: Exit & Clearance ─── */
+.life-exits-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.life-exit-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.life-exit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.life-exit-header h3 {
+  margin: 0 0 2px;
+  font-size: 17px;
+  color: var(--text-h, #0f172a);
+}
+
+.life-exit-sub {
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.life-exit-status-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.life-exit-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  background: var(--surface-bg, #f8fafc);
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  font-size: 13px;
+}
+
+.life-exit-reason-text {
+  margin: 0;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text, #64748b);
+}
+
+/* Clearance checklist */
+.life-clearance-section h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--text-muted, #64748b);
+  letter-spacing: 0.04em;
+}
+
+.life-clearance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.life-clearance-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.life-clearance-pill.cleared {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #047857;
+}
+
+.life-clearance-pill.pending {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #b45309;
+}
+
+.life-pill-icon {
+  font-size: 20px;
+}
+
+.life-pill-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.life-pill-info strong {
+  font-size: 13px;
+}
+
+.life-pill-info span {
+  font-size: 11px;
+}
+
+.life-exit-actions-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color, #f1f5f9);
+}
+
+.btn-finalize-action {
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn-finalize-action:hover {
+  background: #059669;
+}
+
+.life-relieving-tag {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ─── Modals ─── */
+.life-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.life-modal-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.25);
+}
+
+.life-modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.life-modal-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-h, #0f172a);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.life-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+}
+
+.life-form {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.life-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.life-form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h, #0f172a);
+}
+
+.life-form-group input,
+.life-form-group select,
+.life-form-group textarea {
+  padding: 10px 14px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--input-bg, #ffffff);
+  color: var(--text-h, #0f172a);
+  outline: none;
+}
+
+.life-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.life-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.btn-modal-cancel {
+  background: transparent;
+  border: 1px solid var(--border-color, #cbd5e1);
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--text, #64748b);
+  cursor: pointer;
+}
+
+.btn-modal-submit {
+  background: #6366f1;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.btn-modal-submit.danger {
+  background: #ef4444;
+}
+
+.btn-modal-submit:hover {
+  opacity: 0.9;
+}
+
+.life-empty-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px dashed var(--border-color, #cbd5e1);
+  border-radius: 14px;
+  padding: 48px;
+  text-align: center;
+}
+
+.life-empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
