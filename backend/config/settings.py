@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     'expenses',
     'performance',
     'lifecycle',
+    'shifts',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

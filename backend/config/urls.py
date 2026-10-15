@@ -23,6 +23,7 @@ urlpatterns = [
     path("api/v1/expenses/", include("expenses.urls")),
     path("api/v1/performance/", include("performance.urls")),
     path("api/v1/lifecycle/", include("lifecycle.urls")),
+    path("api/v1/shifts/", include("shifts.urls")),
     path("api/v1/", include("employees.urls")),
 ]
 

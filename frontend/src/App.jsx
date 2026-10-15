@@ -19,6 +19,7 @@ import Projects from "./components/Projects";
 import Expenses from "./components/Expenses";
 import Performance from "./components/Performance";
 import Lifecycle from "./components/Lifecycle";
+import Shifts from "./components/Shifts";
 import { ChatWebSocketClient, getUserSlug } from "./services/chatSocket";
 
 // ─── Role-gated navigation ────────────────────────────────────────────────
@@ -33,6 +34,7 @@ const ALL_NAV = [
   { name: "Expenses",     icon: "🧾", roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"] },
   { name: "Performance",  icon: "⭐", roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"] },
   { name: "Lifecycle",    icon: "🎓", roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"] },
+  { name: "Shifts",       icon: "⏰", roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"] },
   { name: "Leave",        icon: "🏖️", roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"] },
   { name: "Payroll",      icon: "💳", roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"] },
   { name: "Reports",     icon: "▤", roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER"] },
@@ -416,6 +418,8 @@ function AppShell() {
             <Performance />
           ) : activePage === "Lifecycle" ? (
             <Lifecycle />
+          ) : activePage === "Shifts" ? (
+            <Shifts user={user} />
           ) : activePage === "Leave" ? (
             <LeaveManagement />
           ) : activePage === "Payroll" ? (
